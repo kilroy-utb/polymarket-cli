@@ -2,24 +2,30 @@
 # Smoke test — hit each endpoint once to confirm everything still works.
 # Run: ./test_smoke.sh
 # Exit 0 = all pass, non-zero = at least one failed.
-
-set -e
+#
+# Each command gets up to 3 attempts (slow endpoints occasionally time out).
 
 cd "$(dirname "$0")"
 
 PASS=0
 FAIL=0
+ATTEMPTS=3
 
 check() {
     local name="$1"
     shift
-    if "$@" >/dev/null 2>&1; then
-        echo "  PASS  $name"
-        PASS=$((PASS+1))
-    else
-        echo "  FAIL  $name  ($*)"
-        FAIL=$((FAIL+1))
-    fi
+    local i=1
+    while [ "$i" -le "$ATTEMPTS" ]; do
+        if "$@" >/dev/null 2>&1; then
+            echo "  PASS  $name"
+            PASS=$((PASS+1))
+            return 0
+        fi
+        i=$((i+1))
+    done
+    echo "  FAIL  $name  (tried $ATTEMPTS times: $*)"
+    FAIL=$((FAIL+1))
+    return 0   # never propagate failure up — we tally ourselves
 }
 
 echo "Smoke testing polymarket CLI..."

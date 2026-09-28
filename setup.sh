@@ -38,11 +38,10 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 PY_VERSION=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')
-PY_MAJOR=$(python3 -c 'import sys; print(sys.version_info[0])')
-PY_MINOR=$(python3 -c 'import sys; print(sys.version_info[1])')
+PY_OK=$(python3 -c 'import sys; print(1 if sys.version_info >= (3, 8) else 0)')
 
 echo "  Found python3 $PY_VERSION"
-if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 8 ]; }; then
+if [ "$PY_OK" != "1" ]; then
     echo "  FAIL  Python 3.8+ required (you have $PY_VERSION)"
     exit 1
 fi
@@ -82,20 +81,39 @@ echo "  PASS  executable bit set"
 # ---------- 4. Network sanity ----------
 echo
 echo "== network check =="
-for url in \
-    "https://gamma-api.polymarket.com/events?limit=1" \
-    "https://clob.polymarket.com/markets?limit=1" \
-    "https://data-api.polymarket.com/trades?limit=1"; do
-    host=$(echo "$url" | sed -E 's|https?://([^/]+).*|\1|')
-    code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "$url" 2>/dev/null || echo "000")
-    if [ "$code" = "200" ]; then
-        echo "  PASS  $host ($code)"
-    elif [ "$code" = "000" ]; then
-        echo "  FAIL  $host unreachable (timeout / DNS / firewall)"
-    else
-        echo "  WARN  $host returned HTTP $code (may be transient)"
-    fi
-done
+python3 - <<'PY'
+import urllib.request, urllib.error, sys
+hosts = [
+    "https://gamma-api.polymarket.com/events?limit=1",
+    "https://clob.polymarket.com/markets?limit=1",
+    "https://data-api.polymarket.com/trades?limit=1",
+]
+fails = 0
+for url in hosts:
+    host = url.split("/")[2]
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "polymarket-cli-setup"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            print(f"  PASS  {host} (HTTP {r.status})")
+    except urllib.error.HTTPError as e:
+        print(f"  WARN  {host} HTTP {e.code} (endpoint responding, may be rate-limited)")
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        print(f"  FAIL  {host} — {e.reason if hasattr(e, 'reason') else e}")
+        fails += 1
+sys.exit(1 if fails == len(hosts) else 0)
+PY
+NET_EXIT=$?
+if [ "$NET_EXIT" -ne 0 ]; then
+    echo
+    echo "All three hosts unreachable. Common causes:"
+    echo "  - Corporate / school firewall blocking outbound HTTPS"
+    echo "  - VPN required for this network"
+    echo "  - DNS misconfigured"
+    echo
+    echo "Try opening https://gamma-api.polymarket.com in a browser."
+    echo "If the browser works but this fails, you likely need a proxy."
+    exit $NET_EXIT
+fi
 
 # ---------- 5. Smoke test ----------
 if [ "$SKIP_TEST" -ne 1 ]; then
