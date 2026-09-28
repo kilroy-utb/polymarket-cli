@@ -38,56 +38,73 @@ _DEFAULT_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
-USER_AGENT = os.environ.get("POLYMARKET_USER_AGENT", _DEFAULT_UA)
-
-# SSL: default to verified. Allow opting out via env var or --insecure flag
-# because some corporate networks MITM HTTPS with a self-signed cert.
-_INSECURE = os.environ.get("POLYMARKET_INSECURE") == "1"
 
 
-# ---------- HTTP ----------
+# ---------- Client ----------
+
+class PolymarketClient:
+    """HTTP client wrapping urllib with proper error handling.
+
+    Replaces module-level globals so multiple instances can have
+    different settings (e.g., one insecure, one not).
+    """
+
+    def __init__(self, *, insecure: bool = False, user_agent: Optional[str] = None,
+                 timeout: float = 20.0):
+        self.user_agent = user_agent or os.environ.get("POLYMARKET_USER_AGENT", _DEFAULT_UA)
+        self.insecure = insecure or os.environ.get("POLYMARKET_INSECURE") == "1"
+        self.timeout = timeout
+
+    def get(self, url: str) -> Union[dict, list]:
+        """GET request, return parsed JSON. Exits on error.
+
+        SSL verification is on by default. If you hit a self-signed cert
+        (common on corporate networks with SSL inspection), retry with
+        --insecure or set POLYMARKET_INSECURE=1.
+        """
+        req = urllib.request.Request(url, headers={"User-Agent": self.user_agent})
+        ctx = ssl._create_unverified_context() if self.insecure else None
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout, context=ctx) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            body = e.read().decode(errors="replace")[:300]
+            # Cloudflare browser integrity check returns 403 with body "error code: 1010"
+            if "1010" in body or "browser integrity" in body.lower():
+                host = urllib.parse.urlparse(url).netloc
+                print(f"Cloudflare blocked request to {host} (browser integrity check, error 1010).", file=sys.stderr)
+                print(f"  This usually means a custom User-Agent is being rejected.", file=sys.stderr)
+                print(f"  Try setting POLYMARKET_USER_AGENT to a normal browser string.", file=sys.stderr)
+            # Detect firewall blocks that come back as 403/404 with HTML "blocked" pages
+            elif e.code in (403, 404) and ("<html" in body.lower() or "blocked" in body.lower() or "封鎖" in body):
+                host = urllib.parse.urlparse(url).netloc
+                print(f"Network blocked access to {host} (HTTP {e.code} — firewall/ISP block page detected).", file=sys.stderr)
+                print(f"  Try a different network (mobile hotspot / VPN).", file=sys.stderr)
+                print(f"  The endpoint itself is up — your network is filtering it.", file=sys.stderr)
+            else:
+                print(f"HTTP {e.code}: {e.reason} — {body}", file=sys.stderr)
+            sys.exit(1)
+        except urllib.error.URLError as e:
+            reason = str(e.reason)
+            if "CERTIFICATE_VERIFY_FAILED" in reason or "certificate verify failed" in reason.lower():
+                print(f"SSL certificate verification failed.", file=sys.stderr)
+                print(f"  This usually means your network is MITM-ing HTTPS (corporate proxy, VPN, Charles, etc.).", file=sys.stderr)
+                print(f"  Retry with --insecure or set POLYMARKET_INSECURE=1", file=sys.stderr)
+                print(f"  (only safe for read-only public data like trades)", file=sys.stderr)
+            else:
+                print(f"Connection error: {e.reason}", file=sys.stderr)
+            sys.exit(1)
+
+
+# Default client used by the cmd_xxx functions below. Tests / callers
+# can override by passing a Client into specific functions (not yet
+# threaded through — out of scope for refactor A).
+_CLIENT = PolymarketClient()
+
 
 def _get(url: str) -> Union[dict, list]:
-    """GET request, return parsed JSON. Exits on error.
-
-    SSL verification is on by default. If you hit a self-signed cert
-    (common on corporate networks with SSL inspection), retry with
-    --insecure or set POLYMARKET_INSECURE=1.
-    """
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    ctx = None
-    if _INSECURE:
-        ctx = ssl._create_unverified_context()
-    try:
-        with urllib.request.urlopen(req, timeout=20, context=ctx) as resp:
-            return json.loads(resp.read().decode())
-    except urllib.error.HTTPError as e:
-        body = e.read().decode(errors="replace")[:300]
-        # Cloudflare browser integrity check returns 403 with body "error code: 1010"
-        if "1010" in body or "browser integrity" in body.lower():
-            host = urllib.parse.urlparse(url).netloc
-            print(f"Cloudflare blocked request to {host} (browser integrity check, error 1010).", file=sys.stderr)
-            print(f"  This usually means a custom User-Agent is being rejected.", file=sys.stderr)
-            print(f"  Try setting POLYMARKET_USER_AGENT to a normal browser string.", file=sys.stderr)
-        # Detect firewall blocks that come back as 403/404 with HTML "blocked" pages
-        elif e.code in (403, 404) and ("<html" in body.lower() or "blocked" in body.lower() or "封鎖" in body):
-            host = urllib.parse.urlparse(url).netloc
-            print(f"Network blocked access to {host} (HTTP {e.code} — firewall/ISP block page detected).", file=sys.stderr)
-            print(f"  Try a different network (mobile hotspot / VPN).", file=sys.stderr)
-            print(f"  The endpoint itself is up — your network is filtering it.", file=sys.stderr)
-        else:
-            print(f"HTTP {e.code}: {e.reason} — {body}", file=sys.stderr)
-        sys.exit(1)
-    except urllib.error.URLError as e:
-        reason = str(e.reason)
-        if "CERTIFICATE_VERIFY_FAILED" in reason or "certificate verify failed" in reason.lower():
-            print(f"SSL certificate verification failed.", file=sys.stderr)
-            print(f"  This usually means your network is MITM-ing HTTPS (corporate proxy, VPN, Charles, etc.).", file=sys.stderr)
-            print(f"  Retry with --insecure or set POLYMARKET_INSECURE=1", file=sys.stderr)
-            print(f"  (only safe for read-only public data like trades)", file=sys.stderr)
-        else:
-            print(f"Connection error: {e.reason}", file=sys.stderr)
-        sys.exit(1)
+    """Module-level convenience wrapper around the default client."""
+    return _CLIENT.get(url)
 
 
 # ---------- Formatters ----------
@@ -315,15 +332,14 @@ def cmd_trades(limit: int, market: Optional[str], outcome: Optional[str], as_jso
         print(f"  {side:4}  {price:>7}  x{size}  [{out}]  {title}  @ {ts}")
 
 
-def cmd_token(token_id: str, depth: int, as_json: bool):
-    """One-shot snapshot: price (buy/sell), midpoint, spread, book."""
+def _fetch_token_snapshot(token_id: str) -> dict:
+    """Fetch buy/sell/mid/spread/book for one token. Used by cmd_token and cmd_quick."""
     buy = _get(f"{CLOB}/price?token_id={token_id}&side=buy")
     sell = _get(f"{CLOB}/price?token_id={token_id}&side=sell")
     mid = _get(f"{CLOB}/midpoint?token_id={token_id}")
     spread = _get(f"{CLOB}/spread?token_id={token_id}")
     book = _get(f"{CLOB}/book?token_id={token_id}")
-    snapshot = {
-        "token_id": token_id,
+    return {
         "buy": buy.get("price"),
         "sell": sell.get("price"),
         "mid": mid.get("mid"),
@@ -335,7 +351,16 @@ def cmd_token(token_id: str, depth: int, as_json: bool):
         "best_ask": book.get("asks", [{}])[0].get("price") if book.get("asks") else None,
         "bid_depth": len(book.get("bids", [])),
         "ask_depth": len(book.get("asks", [])),
+        "bids": book.get("bids", []),
+        "asks": book.get("asks", []),
     }
+
+
+def cmd_token(token_id: str, depth: int, as_json: bool):
+    """One-shot snapshot: price (buy/sell), midpoint, spread, book."""
+    s = _fetch_token_snapshot(token_id)
+    snapshot = {k: v for k, v in s.items() if k not in ("bids", "asks")}
+    snapshot["token_id"] = token_id
     if as_json:
         return emit(snapshot, True)
     print(f"Token: {token_id}")
@@ -358,7 +383,6 @@ def cmd_quick(slug: str, depth: int, as_json: bool):
     m = markets[0]
     tokens = _parse_json_field(m.get("clobTokenIds", "[]"))
     outcomes = _parse_json_field(m.get("outcomes", []))
-    prices = _parse_json_field(m.get("outcomePrices", []))
 
     if not isinstance(tokens, list) or len(tokens) < 2:
         print("Market has no tradable CLOB tokens.", file=sys.stderr)
@@ -366,20 +390,16 @@ def cmd_quick(slug: str, depth: int, as_json: bool):
 
     snapshots = []
     for i, t in enumerate(tokens):
-        buy = _get(f"{CLOB}/price?token_id={t}&side=buy").get("price")
-        sell = _get(f"{CLOB}/price?token_id={t}&side=sell").get("price")
-        mid = _get(f"{CLOB}/midpoint?token_id={t}").get("mid")
-        book = _get(f"{CLOB}/book?token_id={t}")
+        s = _fetch_token_snapshot(t)
         label = outcomes[i] if isinstance(outcomes, list) and i < len(outcomes) else f"Outcome {i}"
         snapshots.append({
             "outcome": label,
             "token_id": t,
-            "buy": buy, "sell": sell, "mid": mid,
-            "last_trade": book.get("last_trade_price"),
-            "best_bid": book.get("bids", [{}])[0].get("price") if book.get("bids") else None,
-            "best_ask": book.get("asks", [{}])[0].get("price") if book.get("asks") else None,
-            "bids": book.get("bids", [])[:depth],
-            "asks": book.get("asks", [])[:depth],
+            "buy": s["buy"], "sell": s["sell"], "mid": s["mid"],
+            "last_trade": s["last_trade"],
+            "best_bid": s["best_bid"], "best_ask": s["best_ask"],
+            "bids": s["bids"][:depth],
+            "asks": s["asks"][:depth],
         })
 
     if as_json:
@@ -433,44 +453,63 @@ def build_parser() -> argparse.ArgumentParser:
     parent_json.add_argument("--json", action="store_true", help="Output JSON instead of formatted text.")
     parent_json.add_argument("--insecure", action="store_true", help="Skip SSL cert verification.")
 
+    def _bind(func, arg_names):
+        """Bind a cmd_xxx(query, limit, json) to argparse args namespace.
+
+        arg_names lists the parameter names in order. The argparse
+        attribute is `json` (from --json) but cmd_xxx params may use
+        any name — this mapping decouples the two.
+        """
+        return lambda args: func(*[getattr(args, name) for name in arg_names])
+
     s = sub.add_parser("search", help="Search events/markets by query.", parents=[parent_json])
     s.add_argument("query")
     s.add_argument("--limit", type=int, default=10)
+    s.set_defaults(func=_bind(cmd_search, ["query", "limit", "json"]))
 
     s = sub.add_parser("trending", help="Top events by volume.", parents=[parent_json])
     s.add_argument("--limit", type=int, default=10)
+    s.set_defaults(func=_bind(cmd_trending, ["limit", "json"]))
 
     s = sub.add_parser("market", help="Get a single market by slug.", parents=[parent_json])
     s.add_argument("slug")
+    s.set_defaults(func=_bind(cmd_market, ["slug", "json"]))
 
     s = sub.add_parser("event", help="Get a single event by slug.", parents=[parent_json])
     s.add_argument("slug")
+    s.set_defaults(func=_bind(cmd_event, ["slug", "json"]))
 
     s = sub.add_parser("price", help="Current price for a token.", parents=[parent_json])
     s.add_argument("token_id")
     s.add_argument("--side", choices=["buy", "sell"], default="buy")
+    s.set_defaults(func=_bind(cmd_price, ["token_id", "side", "json"]))
 
     s = sub.add_parser("book", help="Orderbook for a token.", parents=[parent_json])
     s.add_argument("token_id")
     s.add_argument("--depth", type=int, default=10)
+    s.set_defaults(func=_bind(cmd_book, ["token_id", "depth", "json"]))
 
     s = sub.add_parser("history", help="Price history for a market (by conditionId).", parents=[parent_json])
     s.add_argument("condition_id")
     s.add_argument("--interval", default="all", choices=["all", "1d", "1w", "1m", "3m", "6m", "1y"])
     s.add_argument("--fidelity", type=int, default=50)
+    s.set_defaults(func=_bind(cmd_history, ["condition_id", "interval", "fidelity", "json"]))
 
     s = sub.add_parser("trades", help="Recent trades.", parents=[parent_json])
     s.add_argument("--limit", type=int, default=10)
     s.add_argument("--market", help="Filter by conditionId")
     s.add_argument("--outcome", choices=["Yes", "No"], help="Filter by outcome")
+    s.set_defaults(func=_bind(cmd_trades, ["limit", "market", "outcome", "json"]))
 
     s = sub.add_parser("token", help="One-shot snapshot: price + book for a token.", parents=[parent_json])
     s.add_argument("token_id")
     s.add_argument("--depth", type=int, default=5)
+    s.set_defaults(func=_bind(cmd_token, ["token_id", "depth", "json"]))
 
     s = sub.add_parser("quick", help="Market + both token prices + books in one shot.", parents=[parent_json])
     s.add_argument("market_slug")
     s.add_argument("--depth", type=int, default=5)
+    s.set_defaults(func=_bind(cmd_quick, ["market_slug", "depth", "json"]))
 
     return p
 
@@ -478,34 +517,15 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
-    as_json = args.json
 
-    # --insecure flag flips the module-level _INSECURE before any request is made.
-    if getattr(args, "insecure", False):
-        global _INSECURE
-        _INSECURE = True
+    # Replace the default client with one matching CLI flags.
+    # Subsequent _get() calls (via the module-level _CLIENT) will
+    # pick up these settings.
+    global _CLIENT
+    _CLIENT = PolymarketClient(insecure=getattr(args, "insecure", False))
 
     try:
-        if args.cmd == "search":
-            cmd_search(args.query, args.limit, as_json)
-        elif args.cmd == "trending":
-            cmd_trending(args.limit, as_json)
-        elif args.cmd == "market":
-            cmd_market(args.slug, as_json)
-        elif args.cmd == "event":
-            cmd_event(args.slug, as_json)
-        elif args.cmd == "price":
-            cmd_price(args.token_id, args.side, as_json)
-        elif args.cmd == "book":
-            cmd_book(args.token_id, args.depth, as_json)
-        elif args.cmd == "history":
-            cmd_history(args.condition_id, args.interval, args.fidelity, as_json)
-        elif args.cmd == "trades":
-            cmd_trades(args.limit, args.market, args.outcome, as_json)
-        elif args.cmd == "token":
-            cmd_token(args.token_id, args.depth, as_json)
-        elif args.cmd == "quick":
-            cmd_quick(args.market_slug, args.depth, as_json)
+        args.func(args)
     except KeyboardInterrupt:
         sys.exit(130)
 
