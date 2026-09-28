@@ -94,8 +94,6 @@ def check_network() -> bool:
         "https://clob.polymarket.com/markets?limit=1",
         "https://data-api.polymarket.com/trades?limit=1",
     ]
-    ssl_failures = 0
-    cf_failures = 0
     real_failures = 0
     mitm_detected = False
     unverified_ctx = ssl._create_unverified_context()
@@ -109,53 +107,44 @@ def check_network() -> bool:
         except urllib.error.HTTPError as e:
             body = e.read().decode(errors="replace")[:200]
             if "1010" in body:
-                fail(f"{host} — Cloudflare browser integrity check (1010)")
-                cf_failures += 1
+                warn(f"{host} — Cloudflare browser integrity check (1010) — endpoint up, just blocked our UA")
+            elif "blocked" in body.lower() or "封鎖" in body or "<html" in body.lower():
+                warn(f"{host} HTTP {e.code} — proxy returned block page")
             else:
-                warn(f"{host} HTTP {e.code} (endpoint responding)")
+                # 404 / 403 / 5xx — proxy is responding, the endpoint itself
+                # might be filtered, but we got a real HTTP response.
+                warn(f"{host} HTTP {e.code} — endpoint may be filtered, but network is reachable")
             continue
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             reason_s = str(getattr(e, "reason", e))
             if "CERTIFICATE_VERIFY_FAILED" in reason_s or "certificate verify failed" in reason_s.lower():
-                ssl_failures += 1
                 mitm_detected = True
-                # Retry with unverified context — many corporate proxies MITM
-                # most hosts but not all. If the unverified request succeeds,
-                # we know the host is reachable and it's a cert issue only.
                 try:
                     with _probe(url, unverified_ctx) as r:
-                        warn(f"{host} (SSL cert verify failed, but reachable with --insecure — HTTP {r.status})")
-                        ssl_failures -= 1   # reachable, don't count as failure
+                        warn(f"{host} — SSL verify failed, but reachable with --insecure (HTTP {r.status})")
+                except urllib.error.HTTPError as retry_http:
+                    warn(f"{host} HTTP {retry_http.code} with --insecure — endpoint may be filtered, network reachable")
                 except Exception as retry_err:
                     fail(f"{host} — SSL cert verify failed AND unreachable with --insecure ({type(retry_err).__name__}: {str(retry_err)[:200]})")
+                    real_failures += 1
             else:
                 fail(f"{host} — {reason_s}")
                 real_failures += 1
 
-    # Anything still failing?
-    total_failed = cf_failures + real_failures + ssl_failures
-    if total_failed == 0:
+    # Only real network failures (timeout / DNS / unreachable) cause hard fail.
+    # Any HTTP response (including 4xx / 5xx / 1010) counts as reachable —
+    # the smoke test will tell us if the actual API calls work.
+    if real_failures == 0:
         if mitm_detected:
             print()
             print("Note: your network appears to MITM HTTPS (corporate proxy / VPN / inspection tool).")
-            print("Some hosts passed with --insecure only. To use the CLI normally, run commands with:")
+            print("Some hosts needed --insecure to reach. To use the CLI normally, run commands with:")
             print("  python3 polymarket.py <command> --insecure")
             print("Or set POLYMARKET_INSECURE=1 in your shell rc.")
         return True
 
-    if cf_failures > 0:
-        print()
-        print("Cloudflare error 1010 (browser integrity check). The default UA was rejected.")
-        print("This is unexpected — please file a bug.")
-    if ssl_failures > 0 and not mitm_detected:
-        print()
-        print("SSL certificate verification failed on your network.")
-        print("Options:")
-        print("  python3 polymarket.py trades --insecure --limit 5")
-        print("  or export POLYMARKET_INSECURE=1")
-    if real_failures > 0:
-        print()
-        print("Network unreachable for some hosts. Check firewall / DNS / VPN.")
+    print()
+    print(f"{real_failures} host(s) unreachable. Check firewall / DNS / VPN.")
     return False
 
 
