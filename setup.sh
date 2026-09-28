@@ -31,8 +31,6 @@ if [ $? -ne 0 ]; then
     echo "Setup check failed. See messages above."
     exit 1
 fi
-
-# ---------- Make sure the script is executable ----------
 chmod +x polymarket.py test_smoke.sh 2>/dev/null || true
 
 # ---------- Smoke test ----------

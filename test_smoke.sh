@@ -43,11 +43,14 @@ check "Combo: token snapshot"     python3 polymarket.py token 160400154401962799
 check "Combo: quick market"       python3 polymarket.py quick will-jd-vance-win-the-2028-us-presidential-election --depth 2
 check "JSON output"               python3 polymarket.py trending --limit 1 --json
 
-# If any check failed and the first failure mentioned SSL cert, offer to rerun with --insecure
+# If any check failed, see whether it's an SSL cert issue. We probe Gamma
+# (which fails for many MITM'd networks) rather than trades, since trades
+# is the one host that tends to pass through cleanly.
 if [ "$FAIL" -gt 0 ]; then
-    if python3 polymarket.py trades --limit 1 2>&1 | grep -qi "CERTIFICATE_VERIFY_FAILED"; then
+    if python3 polymarket.py market will-jd-vance-win-the-2028-us-presidential-election 2>&1 | grep -qi "CERTIFICATE_VERIFY_FAILED"; then
         echo
-        echo "Detected SSL certificate failure. Re-running with --insecure..."
+        echo "Detected SSL certificate failure (your network appears to MITM HTTPS)."
+        echo "Re-running all checks with --insecure..."
         echo
         PASS=0; FAIL=0
         check "Gamma: trending"           python3 polymarket.py --insecure trending --limit 3

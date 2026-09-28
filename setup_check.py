@@ -81,6 +81,12 @@ _UA = (
 )
 
 
+def _probe(url: str, ctx):
+    """Try one request; return (status, body) on HTTPError, or raise on URL error."""
+    req = urllib.request.Request(url, headers={"User-Agent": _UA})
+    return urllib.request.urlopen(req, timeout=10, context=ctx)
+
+
 def check_network() -> bool:
     header("network check")
     hosts = [
@@ -88,62 +94,69 @@ def check_network() -> bool:
         "https://clob.polymarket.com/markets?limit=1",
         "https://data-api.polymarket.com/trades?limit=1",
     ]
-    fails = 0
     ssl_failures = 0
     cf_failures = 0
+    real_failures = 0
+    mitm_detected = False
+    unverified_ctx = ssl._create_unverified_context()
+
     for url in hosts:
         host = url.split("/")[2]
-        ctx = None
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": _UA})
-            with urllib.request.urlopen(req, timeout=10, context=ctx) as r:
+            with _probe(url, None) as r:
                 ok(f"{host} (HTTP {r.status})")
+                continue
         except urllib.error.HTTPError as e:
-            reason_body = e.read().decode(errors="replace")[:200]
-            if "1010" in reason_body:
+            body = e.read().decode(errors="replace")[:200]
+            if "1010" in body:
                 fail(f"{host} — Cloudflare browser integrity check (1010)")
                 cf_failures += 1
             else:
-                warn(f"{host} HTTP {e.code} (endpoint responding, may be rate-limited)")
-            fails += 1
+                warn(f"{host} HTTP {e.code} (endpoint responding)")
+            continue
         except (urllib.error.URLError, TimeoutError, OSError) as e:
-            reason = getattr(e, "reason", e)
-            reason_s = str(reason)
+            reason_s = str(getattr(e, "reason", e))
             if "CERTIFICATE_VERIFY_FAILED" in reason_s or "certificate verify failed" in reason_s.lower():
-                fail(f"{host} — SSL cert verify failed (likely MITM/proxy on your network)")
                 ssl_failures += 1
+                mitm_detected = True
+                # Retry with unverified context — many corporate proxies MITM
+                # most hosts but not all. If the unverified request succeeds,
+                # we know the host is reachable and it's a cert issue only.
+                try:
+                    with _probe(url, unverified_ctx) as r:
+                        warn(f"{host} (SSL cert verify failed, but reachable with --insecure — HTTP {r.status})")
+                        ssl_failures -= 1   # reachable, don't count as failure
+                except Exception:
+                    fail(f"{host} — SSL cert verify failed AND unreachable with --insecure")
             else:
-                fail(f"{host} — {reason}")
-            fails += 1
+                fail(f"{host} — {reason_s}")
+                real_failures += 1
 
-    if fails == len(hosts):
-        if cf_failures > 0:
+    # Anything still failing?
+    total_failed = cf_failures + real_failures + ssl_failures
+    if total_failed == 0:
+        if mitm_detected:
             print()
-            print("All three hosts failed with Cloudflare error 1010 (browser integrity check).")
-            print("This means Cloudflare is rejecting the User-Agent the script uses.")
-            print("This shouldn't happen with the default UA — file a bug.")
-        elif ssl_failures > 0:
-            print()
-            print("All three hosts failed with SSL certificate errors.")
-            print("This usually means a corporate proxy / VPN / MITM tool is intercepting HTTPS.")
-            print()
-            print("Options:")
-            print("  1. Use --insecure on every command:")
-            print("       python3 polymarket.py trades --insecure --limit 5")
-            print("  2. Or set POLYMARKET_INSECURE=1 in your environment.")
-            print("  3. Or add your proxy's CA cert to Python's cert store:")
-            print("       pip install --upgrade certifi")
-        else:
-            print()
-            print("All three hosts unreachable. Common causes:")
-            print("  - Corporate / school firewall blocking outbound HTTPS")
-            print("  - VPN required for this network")
-            print("  - DNS misconfigured")
-            print()
-            print("Try opening https://gamma-api.polymarket.com in a browser.")
-            print("If the browser works but this fails, you likely need a proxy.")
-        return False
-    return True
+            print("Note: your network appears to MITM HTTPS (corporate proxy / VPN / inspection tool).")
+            print("Some hosts passed with --insecure only. To use the CLI normally, run commands with:")
+            print("  python3 polymarket.py <command> --insecure")
+            print("Or set POLYMARKET_INSECURE=1 in your shell rc.")
+        return True
+
+    if cf_failures > 0:
+        print()
+        print("Cloudflare error 1010 (browser integrity check). The default UA was rejected.")
+        print("This is unexpected — please file a bug.")
+    if ssl_failures > 0 and not mitm_detected:
+        print()
+        print("SSL certificate verification failed on your network.")
+        print("Options:")
+        print("  python3 polymarket.py trades --insecure --limit 5")
+        print("  or export POLYMARKET_INSECURE=1")
+    if real_failures > 0:
+        print()
+        print("Network unreachable for some hosts. Check firewall / DNS / VPN.")
+    return False
 
 
 def main() -> int:
