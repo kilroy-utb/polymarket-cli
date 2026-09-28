@@ -180,71 +180,294 @@ def group_key(question: str) -> str:
     return n[:50]
 
 
-# ---------- Translate: dict + structural templates ----------
+# ---------- Translate: structured question parser ----------
 
-# Common translations
-TR = {
-    "Will ": "",
-    "win the ": "贏得 ",
-    "beat ": "擊敗 ",
-    "be the next ": "成為下一任 ",
-    "be President": "成為總統",
-    "President of the USA": "美國總統",
-    "U.S. President": "美國總統",
-    "the U.S.": "美國",
-    "the United States": "美國",
-    "United States": "美國",
-    "US Presidential Election": "美國總統大選",
-    " US ": " 美國 ",
-    "year?": "年？",
-    " by ": " 在 ",
-    " on September": " 九月",
-    " on October": " 十月",
-    " on November": " 十一月",
-    " on December": " 十二月",
-    " on January": " 一月",
-    " on February": " 二月",
-    " on March": " 三月",
-    " on April": " 四月",
-    " on May": " 五月",
-    " on June": " 六月",
-    " on July": " 七月",
-    " on August": " 八月",
+# People / entities / companies / places — solid dictionary.
+ENTITY_ZH = {
+    # People
+    "Donald Trump": "川普", "Donald J. Trump": "川普", "Trump": "川普",
+    "Joe Biden": "拜登", "Biden": "拜登",
+    "Ron DeSantis": "迪桑蒂斯", "DeSantis": "迪桑蒂斯",
+    "Gavin Newsom": "紐森", "Newsom": "紐森",
+    "Nikki Haley": "海利", "Haley": "海利",
+    "Kamala Harris": "賀錦麗", "Harris": "賀錦麗",
+    "Mike Pence": "彭斯", "Pence": "彭斯",
+    "Vivek Ramaswamy": "拉馬斯瓦米", "Ramaswamy": "拉馬斯瓦米",
+    "Tim Ryan": "提姆·萊恩",
+    "Andy Levin": "安迪·李文",
+    "Sean Patrick Maloney": "馬洛尼",
+    "Julie Su": "朱莉·蘇",
+    "George Santos": "喬治·桑托斯",
+    "Ronna McDaniel": "羅娜·麥克丹尼爾",
+    "Benjamin Netanyahu": "納坦雅胡", "Netanyahu": "納坦雅胡",
+    "Volodymyr Zelensky": "澤倫斯基", "Zelensky": "澤倫斯基", "Zelenskyy": "澤倫斯基",
+    "Vladimir Putin": "普丁", "Putin": "普丁",
+    "Xi Jinping": "習近平",
+    "Elon Musk": "馬斯克",
+    "Sam Bankman-Fried": "SBF", "SBF": "SBF",
+    "Sam Trabucco": "山姆·特拉布科", "Sam Tabucco": "山姆·特拉布科",
+    "Caroline Ellison": "卡羅琳·艾莉森",
+    "Andrew Tate": "安德魯·泰特",
+    "Do Kwon": "權道亨",
+    "Brendan Fraser": "布蘭登·費雪",
+    "Cate Blanchett": "凱特·布蘭琪",
+    "Jake Paul": "傑克·保羅",
+    "Tommy Fury": "湯米·富里",
+    "Magnus Carlsen": "卡爾森",
+    "LeBron": "詹姆斯", "LeBron James": "詹姆斯",
+    "Iga Swiatek": "斯威雅蒂", "Swiatek": "斯威雅蒂",
+    "Jessica Pegula": "佩古拉", "Pegula": "佩古拉",
+    # Companies / orgs
+    "Polymarket": "Polymarket",
+    "OpenAI": "OpenAI", "ChatGPT": "ChatGPT", "GPT-4": "GPT-4",
+    "Google": "Google", "Bing": "Bing",
+    "Apple": "Apple", "Microsoft": "微軟",
+    "Amazon": "Amazon", "Meta": "Meta",
+    "Tesla": "Tesla", "Nvidia": "Nvidia",
+    "Coinbase": "Coinbase", "Binance": "幣安", "OpenSea": "OpenSea",
+    "Uniswap": "Uniswap", "Arbitrum": "Arbitrum", "Blur": "Blur",
+    "Optimism": "Optimism", "Base": "Base",
+    "Anthropic": "Anthropic", "Claude": "Claude",
+    "DeepMind": "DeepMind", "Gemini": "Gemini",
+    "LLaMA": "LLaMA", "Llama": "LLaMA",
+    "Twitter": "Twitter",
+    "Spotify": "Spotify",
+    "BlockFi": "BlockFi", "Voyager": "Voyager", "Three Arrows Capital": "三箭資本",
+    "Genesis": "Genesis", "DCG": "DCG",
+    "FTX": "FTX", "Silvergate": "Silvergate",
+    "Metamask": "MetaMask",
+    "SpaceX": "SpaceX",
+    # Tokens / cryptos
+    "Bitcoin": "比特幣", "BTC": "比特幣",
+    "Ethereum": "以太幣", "ETH": "以太幣",
+    "Solana": "Solana", "SOL": "Solana",
+    "Dogecoin": "狗狗幣", "DOGE": "狗狗幣",
+    "Polygon": "Polygon", "MATIC": "MATIC",
+    "USDC": "USDC", "BUSD": "BUSD", "SAFE": "SAFE",
+    "Luna": "Luna", "LUNA": "Luna",
+    "Arbitrum's token": "Arbitrum 代幣", "OpenSea's token": "OpenSea 代幣",
+    # Sports teams
+    "Liverpool": "利物浦", "Manchester City": "曼城", "Chelsea": "切爾西",
+    "Arsenal": "阿森納", "Manchester United": "曼聯", "Newcastle": "紐卡斯爾",
+    "Tottenham": "熱刺", "Spurs": "熱刺", "Brentford": "布倫特福德",
+    "Brighton": "布萊頓", "Everton": "埃弗頓", "West Ham": "西漢姆",
+    "Aston Villa": "阿斯頓維拉", "Crystal Palace": "水晶宮", "Fulham": "富勒姆",
+    "Wolves": "狼隊", "Wolverhampton": "狼隊",
+    "Nottingham Forest": "諾丁漢森林", "Bournemouth": "伯恩茅斯",
+    "Luton": "盧頓", "Burnley": "伯恩利", "Sheffield": "謝菲爾德",
+    "Ipswich": "伊普斯維奇", "Sunderland": "桑德蘭",
+    "Celtics": "塞爾蒂克", "Dodgers": "道奇",
+    "Southampton": "南安普敦", "Leicester": "萊斯特城", "Liecester": "萊斯特城",
+    "Leeds": "利茲", "OKC": "雷霆",
+    # Places / countries
+    "U.S.": "美國", "US": "美國", "United States": "美國", "USA": "美國",
+    "New York": "紐約", "Central Park": "中央公園",
+    "Pennsylvania": "賓州", "Wisconsin": "威斯康辛",
+    "U.K.": "英國", "UK": "英國",
+    "Israel": "以色列", "Russia": "俄羅斯", "Ukraine": "烏克蘭",
+    "China": "中國", "Taiwan": "台灣", "Iran": "伊朗",
+    "North Korea": "北韓", "Saudi": "沙烏地",
+    "Qatar": "卡達",
+    # Movies / pop culture
+    "Avatar: The Way of Water": "《阿凡達：水之道》", "Avatar": "《阿凡達》",
+    "Top Gun: Maverick": "《捍衛戰士：獨行俠》", "Top Gun": "《捍衛戰士》",
+    "The Fabelmans": "《法貝爾曼》",
+    "Everything Everywhere All At Once": "《媽的多重宇宙》",
+    "Shazam! Fury of the Gods": "《沙贊！眾神之怒》",
+    "Ant-Man and the Wasp: Quantumania": "《蟻人與黃蜂女：量子狂熱》",
+    "Cocaine Bear": "《古柯鹼熊》",
+    "Flowers": "《Flowers》",
+}
+
+# Common verbs / patterns
+VERB_ZH = {
+    "win the": "贏得", "beat": "擊敗", "remain": "繼續擔任",
+    "be the next": "成為下一任", "file to run": "宣布參選",
+    "reach": "達到", "gross more than": "票房超過",
+    "be above": "超過", "be below": "低於",
+    "launch": "發行", "have": "擁有", "release": "釋出",
+    "be available in the US": "在美國開放",
+    "cut rates": "降息", "hike rates": "升息",
+    "go insolvent": "倒閉", "depeg": "脫鉤",
+    "file for bankruptcy": "聲請破產",
+    "extradite": "引渡", "indict": "起訴",
+    "report": "回報", "outage": "中斷",
+    "snow": "下雪",
+}
+
+# Locations / events
+EVENT_ZH = {
+    "2024 Iowa Caucus": "2024 年愛荷華州黨團會議",
+    "2024 Presidential Election": "2024 總統大選",
+    "U.S. 2024 Republican presidential nomination": "美國 2024 共和黨總統提名",
+    "U.S. 2024 Presidential Election": "2024 美國總統大選",
+    "2024 US Presidential Election": "2024 美國總統大選",
+    "U.S. Secretary of Labor": "美國勞工部長",
+    "Secretary of Labor": "勞工部長",
+    "U.S. Senate": "美國參議院",
+    "2024 election": "2024 選舉",
+    "the 2024 election": "2024 選舉",
+    "World Cup": "世界盃", "Super Bowl": "超級盃",
+    "Super Bowl LVII": "超級盃 LVII", "Super Bowl LVIII": "超級盃 LVIII",
+    "NBA Finals": "NBA 總冠軍賽",
+    "Wimbledon Championships": "溫布頓網球錦標賽",
+    "Australian Open": "澳洲網球公開賽",
+    "U.S. Open": "美國公開賽",
+    "Premier League championship": "英超冠軍",
+    "English Premier League": "英格蘭超級聯賽",
+    "Tata Steel Masters 2023": "2023 Tata Steel 大師賽",
+    "Golden Globes": "金球獎", "Oscar": "奧斯卡",
+    "Best Picture - Drama": "最佳劇情片",
+    "Best Picture - Musical or Comedy": "最佳音樂或喜劇片",
+    "Best Actor - Drama": "最佳劇情片男主角",
+    "Best Actress - Drama": "最佳劇情片女主角",
+    "Best Picture": "最佳影片",
+    "Best Actor": "最佳男主角",
+    "Best Actress": "最佳女主角",
+    "central bank digital currency": "央行數位貨幣",
+    "FDV": "完全稀釋估值",
+    "ChatGPT competitor": "ChatGPT 競爭對手",
+    "2028 Republican presidential nomination": "2028 共和黨總統提名",
+    "2028 Democratic presidential nomination": "2028 民主黨總統提名",
+    "2028 US Presidential Election": "2028 美國總統大選",
+    "Iowa Caucus": "愛荷華州黨團會議",
+    "New Hampshire primary": "新罕布什爾州初選",
+    "presidential primary": "總統初選",
+    "Speaker of the House": "聯邦眾議院議長",
+    "Speaker of the United States House of Representatives": "聯邦眾議院議長",
+    "Tata Steel Masters": "Tata Steel 大師賽",
+    "Republican presidential nomination": "共和黨總統提名",
+    "Democratic presidential nomination": "民主黨總統提名",
+    "Republican Party": "共和黨", "Democratic Party": "民主黨",
+    "Republican House": "共和黨眾議院",
+    "Democratic House": "民主黨眾議院",
+    "Senate": "參議院", "House": "眾議院",
+    "White House": "白宮",
+    "Federal Reserve": "聯準會", "the Fed": "聯準會",
+    "Bond yield": "債券殖利率", "treasury": "財政部",
+    "interest rate": "利率", "rate cut": "降息", "rate hike": "升息",
+    "inflation rate": "通膨率", "balance sheet": "資產負債表",
+    "rate": "利率",
+}
+
+# Months / dates
+MONTH_ZH = {
     "January": "一月", "February": "二月", "March": "三月", "April": "四月",
     "May": "五月", "June": "六月", "July": "七月", "August": "八月",
     "September": "九月", "October": "十月", "November": "十一月", "December": "十二月",
-    "Bitcoin": "比特幣", "Ethereum": "以太幣", "Solana": "Solana",
-    "Trump": "川普", "Biden": "拜登", "DeSantis": "迪桑蒂斯",
-    "Newsom": "紐森", "Harris": "賀錦麗", "Haley": "海利",
-    "Fed": "聯準會", "Federal Reserve": "聯準會",
-    "inflation": "通膨", "interest rate": "利率", "rate cut": "降息", "rate hike": "升息",
-    "World Cup": "世界盃", "Super Bowl": "超級盃",
-    "NBA Finals": "NBA 總冠軍賽", "Championship": "錦標賽",
-    "Elon Musk": "馬斯克", "OpenAI": "OpenAI", "GPT-4": "GPT-4",
-    "Tesla": "Tesla", "Apple": "Apple", "Microsoft": "微軟",
-    "Israel": "以色列", "Russia": "俄羅斯", "Ukraine": "烏克蘭",
-    "Putin": "普丁", "Zelensky": "澤倫斯基",
-    "Taiwan": "台灣", "China": "中國", "Iran": "伊朗",
-    "yes": "是", "no": "否",
+    "Jan": "一月", "Feb": "二月", "Mar": "三月", "Apr": "四月",
+    "Jun": "六月", "Jul": "七月", "Aug": "八月", "Sep": "九月", "Oct": "十月", "Nov": "十一月", "Dec": "十二月",
+}
+
+# Other phrases
+PHRASE_ZH = {
+    "year end": "年底", "EOY": "年底", "by year end": "年底前",
+    "next ": "下一任 ", "next year": "明年", "this year": "今年",
+    "publicly": "公開", "officially": "正式",
+    "President of the USA": "美國總統",
+    "be President of the USA": "成為美國總統",
+    "be the next president": "成為下一任總統",
+    "be the next Secretary of Labor": "成為下一任勞工部長",
+    "win the White House": "入主白宮",
 }
 
 
-def translate(question: str) -> str:
-    """Rough EN → zh-TW translation by dictionary + structural rules.
+def _translate_dict(s: str, table: dict) -> str:
+    """Apply dictionary, longest-key-first to avoid prefix collisions.
 
-    This is intentionally partial — exact entity names and dates may be
-    left in English, which is fine for a glanceable digest.
+    Uses word boundaries so 'US' inside 'USDC' isn't matched separately.
     """
-    s = question
-    # Sort by length DESC so longer phrases match before their substrings
-    for en in sorted(TR.keys(), key=len, reverse=True):
-        if en in s:
-            s = s.replace(en, TR[en])
-    # Strip trailing ?
-    s = s.rstrip(" ?")
+    for k in sorted(table.keys(), key=len, reverse=True):
+        # Use word boundaries; fall back to plain replace for keys that
+        # already contain non-word chars.
+        if re.search(r"\w", k):
+            pattern = r"\b" + re.escape(k) + r"\b"
+            s = re.sub(pattern, table[k], s)
+        else:
+            s = s.replace(k, table[k])
+    return s
+
+
+def summarize(question: str) -> str:
+    """Render a 5-15 character Chinese summary of what the market asks.
+
+    Strategy: extract named entities (already in ENTITY_ZH / EVENT_ZH),
+    keep critical numbers/dates in original form. Skip articles and verbs.
+    Never produce broken mixed English — this is NOT a full translation.
+    """
+    # First apply entity/event translation (these are unambiguous)
+    s = _translate_dict(question, EVENT_ZH)
+    s = _translate_dict(s, ENTITY_ZH)
+    s = _translate_dict(s, MONTH_ZH)
+    s = _translate_dict(s, PHRASE_ZH)
+
+    # Strip leading question words
+    s = re.sub(r"^(Who will|Which party will|Will|Would)\s+", "", s, flags=re.I)
+
+    # Drop common verbs / connectors — leave entities and the thing being asked about
+    # We strip the verb but keep "Yes/No" relationship implicit
+    drop_words = [
+        r"\bbe the next\b", r"\bbe available\b", r"\bbe above\b", r"\bbe below\b",
+        r"\bwin the\b", r"\bbeat\b", r"\breach\b", r"\bhave\b",
+        r"\bgross more than\b", r"\bfile to run\b", r"\bfile for\b",
+        r"\bremain\b", r"\bcut rates?\b", r"\bhike rates?\b",
+        r"\blaunch their token\b", r"\blaunch\b", r"\btransferable\b",
+        r"\bextradited\b", r"\bindicted\b", r"\bcharged\b",
+        r"\bsuspend\b", r"\bgo insolvent\b", r"\bdepeg\b",
+        r"\benter\b", r"\bpublicly\b", r"\bfile\b",
+        r"\bwill\b", r"\bwould\b", r"\bcan\b",
+        r"\bfor president\b", r"\bsnow\b", r"\bany field goal\b",
+        r"\bany\s+\w+\s+be\b",
+    ]
+    for w in drop_words:
+        s = re.sub(w, "", s, flags=re.I)
+
+    # Strip "by <date>" / "in <year>" / "on <date>" — keep date but drop the prep
+    s = re.sub(r"\s+by\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+in\s+(\d{4})\b", r" \1", s)
+    s = re.sub(r"\s+on\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+through\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+after\s+launch\b", " 發行後", s, flags=re.I)
+    s = re.sub(r"\s+after\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+before\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+from\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+the\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+of the\s+", " ", s, flags=re.I)
+    s = re.sub(r"\s+to\s+", " ", s, flags=re.I)
+
+    # Apostrophe-s → 的
+    s = re.sub(r"(\w)'s\b", r"\1的", s)
+
+    # Drop article / connector words that survived
+    s = re.sub(r"\bthere\s+be\s+a\b", "", s, flags=re.I)
+    s = re.sub(r"\bthere\s+be\b", "", s, flags=re.I)
+    s = re.sub(r"\bany\s+", "", s, flags=re.I)
+
+    # Drop filler English verbs / preps
+    for w in ["be", "a", "an", "or", "and", "the", "for", "in", "of", "on", "at", "to"]:
+        s = re.sub(r"\b" + w + r"\b\s*", "", s, flags=re.I)
+
     # Collapse whitespace
     s = re.sub(r"\s+", " ", s).strip()
+
+    # Drop leading question words that may have escaped
+    s = re.sub(r"^(Who|Which|What|When|Where)\s+", "", s, flags=re.I)
+
+    # Cap at reasonable length
+    if len(s) > 60:
+        # Try to find a natural break
+        for sep in [" vs ", " 達 ", " 贏 ", " 擊敗 ", " 降 ", " 升 "]:
+            if sep in s:
+                s = s.split(sep)[0] + sep.rstrip() + " ..."
+                break
+
+    # Trim trailing punctuation
+    s = s.rstrip(" ?.,")
     return s
+
+
+# Keep the original translate() as a fallback (returns best-effort full sentence).
+# The HTML now uses summarize() instead, which produces cleaner zh text.
 
 
 # ---------- Pull data ----------
@@ -258,18 +481,36 @@ data = markets["data"]
 
 
 def is_active(m):
-    """Active, not closed, not junk."""
-    if m.get("closed"):
-        return False
+    """Show the market if it has prices AND (is still active OR has a resolved outcome)."""
     q = m.get("question", "")
     if is_junk(q):
         return False
     if not m.get("tokens"):
         return False
-    return True
+    # Active (open) — always show
+    if not m.get("closed"):
+        return True
+    # Closed — only show if it was actually resolved (some winner token)
+    for t in m["tokens"]:
+        if t.get("winner") is True:
+            return True
+    return False
 
 
 active = [m for m in data if is_active(m)]
+
+# Sort: trading first, then by resolved (resolved first), then by |spread| desc
+def sort_key(m):
+    return (
+        not bool(m.get("accepting_orders")),
+        not any(t.get("winner") is True for t in m.get("tokens", [])),
+        -abs((next((t for t in m["tokens"] if t.get("outcome") == "No"), {}).get("price") or 0)
+            - (next((t for t in m["tokens"] if t.get("outcome") == "Yes"), {}).get("price") or 0)),
+    )
+active.sort(key=sort_key)
+# Cap to keep page load reasonable
+MAX_MARKETS = 200
+active = active[:MAX_MARKETS]
 
 # Build per-market rows
 rows = []
@@ -278,13 +519,24 @@ for m in active:
     no_t = next((t for t in m["tokens"] if t.get("outcome") == "No"), m["tokens"][1])
     yp, np = yes_t.get("price"), no_t.get("price")
     spread = (np - yp) if (yp is not None and np is not None) else None
+    # Determine resolved outcome (winner flag)
+    yes_won = yes_t.get("winner") is True
+    no_won = no_t.get("winner") is True
+    if yes_won:
+        result = "yes"
+    elif no_won:
+        result = "no"
+    else:
+        result = None  # unresolved / open
     q = m.get("question", "?")
     rows.append({
         "question": q,
-        "question_zh": translate(q),
+        "question_zh": summarize(q),
         "category": categorize(q),
         "yes_price": yp, "no_price": np, "spread": spread,
         "trading": bool(m.get("accepting_orders")),
+        "closed": bool(m.get("closed")),
+        "result": result,
         "group": group_key(q),
     })
 
@@ -337,7 +589,7 @@ def fmt_spread(s):
 # Render one group as a card / table
 def render_group(g):
     primary = g["primary"]
-    badge = "\U0001F7E2" if primary["trading"] else "\U0001F7E1"
+    badge = "\U0001F7E2" if primary["trading"] else ("\u26AA" if primary["closed"] else "\U0001F7E1")
     cls = "trading" if primary["trading"] else ""
     spread_class = ""
     if primary["spread"] is not None:
@@ -348,9 +600,16 @@ def render_group(g):
         elif abs(primary["spread"]) < 0.001:
             spread_class = "spread-locked"
 
+    # Result badge: "✓ Yes" / "✓ No" / "—" (open) with color
+    result_cell = '<td class="num result">—</td>'
+    if primary.get("result") == "yes":
+        result_cell = '<td class="num result yes-win">✓ 是</td>'
+    elif primary.get("result") == "no":
+        result_cell = '<td class="num result no-win">✓ 否</td>'
+
     extra_rows = ""
     if g["count"] > 1:
-        extra_rows = "<tr class=\"group-detail\"><td colspan=\"4\"><details><summary>展開看其他 "
+        extra_rows = "<tr class=\"group-detail\"><td colspan=\"5\"><details><summary>展開看其他 "
         extra_rows += str(g["count"]) + " 個相關市場</summary><ul>"
         for r in g["all"][:8]:  # cap at 8 to keep page light
             extra_rows += "<li>" + r["question"] + " — <b>Yes " + fmt_pct(r["yes_price"]) + "</b></li>"
@@ -365,7 +624,8 @@ def render_group(g):
         "<td class=\"num yes\">" + fmt_pct(primary["yes_price"]) + "</td>"
         "<td class=\"num no\">" + fmt_pct(primary["no_price"]) + "</td>"
         "<td class=\"num spread\">" + fmt_spread(primary["spread"]) + "</td>"
-        "</tr>"
+        + result_cell
+        + "</tr>"
         + extra_rows
     )
 
@@ -386,7 +646,7 @@ for cat_key in ("politics", "economics", "world", "tech", "crypto", "sports",
     cat_sections_html += (
         "\n<h2>" + cat_zh + " (" + str(len(cat_groups)) + " 主題)</h2>"
         "\n<table>"
-        "\n  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>"
+        "\n  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th><th>結果</th></tr></thead>"
         "\n  <tbody>"
     )
     for g in cat_groups:
@@ -396,7 +656,7 @@ for cat_key in ("politics", "economics", "world", "tech", "crypto", "sports",
 
 # Trades table (translate titles too)
 def translate_title(t: str) -> str:
-    return translate(t) if t else "?"
+    return summarize(t) if t else "?"
 
 
 trades_html = ""
@@ -476,6 +736,9 @@ html = """<!DOCTYPE html>
   td.out  { color: var(--accent); }
   td.title { color: var(--fg-dim); }
   td.title .q-zh { color: var(--fg); margin-top: 2px; font-size: 12px; }
+  td.result { font-weight: 600; }
+  td.yes-win { color: var(--green); }
+  td.no-win  { color: var(--red); }
   .q-zh {
     color: var(--fg); margin-top: 2px; font-size: 12px; opacity: 0.85;
   }
