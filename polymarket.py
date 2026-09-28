@@ -445,7 +445,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", required=True)
     parent_json = argparse.ArgumentParser(add_help=False)
     parent_json.add_argument("--json", action="store_true", help="Output JSON instead of formatted text.")
-    parent_json.add_argument("--insecure", action="store_true", help="Skip SSL cert verification.")
+    # NOTE: --insecure is NOT in parent_json — argparse gets confused when
+    # the same flag is on both the main parser and every subparser (via
+    # parents=). Keeping it only on the main parser so `args.insecure`
+    # reliably reflects the user's flag.
 
     def _bind(func, arg_names):
         """Bind a cmd_xxx(query, limit, json) to argparse args namespace.
