@@ -54,7 +54,14 @@ def _get(url: str) -> Union[dict, list]:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors="replace")[:300]
-        print(f"HTTP {e.code}: {e.reason} — {body}", file=sys.stderr)
+        # Detect firewall blocks that come back as 403/404 with HTML "blocked" pages
+        if e.code in (403, 404) and ("<html" in body.lower() or "blocked" in body.lower() or "封鎖" in body):
+            host = urllib.parse.urlparse(url).netloc
+            print(f"Network blocked access to {host} (HTTP {e.code} — firewall/ISP block page detected).", file=sys.stderr)
+            print(f"  Try a different network (mobile hotspot / VPN).", file=sys.stderr)
+            print(f"  The endpoint itself is up — your network is filtering it.", file=sys.stderr)
+        else:
+            print(f"HTTP {e.code}: {e.reason} — {body}", file=sys.stderr)
         sys.exit(1)
     except urllib.error.URLError as e:
         reason = str(e.reason)
