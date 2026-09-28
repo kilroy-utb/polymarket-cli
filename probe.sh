@@ -8,19 +8,23 @@
 # endpoints are usable.
 #
 # Usage:
-#   ./probe.sh            # plain probe, ~30s
-#   ./probe.sh --insecure # force --insecure on every call
+#   ./probe.sh            # default: with --insecure (recommended)
+#   ./probe.sh --secure   # force SSL verification
 #   ./probe.sh --json     # machine-readable output
 
 set -u
 
 cd "$(dirname "$0")"
 
-EXTRA_ARGS=()
+# Default to --insecure. Many corporate / restricted networks MITM the
+# Gamma host specifically (and only Gamma), so a secure client always
+# fails there. Use --secure to force verification.
+EXTRA_ARGS=(--insecure)
 JSON=0
 for arg in "$@"; do
     case "$arg" in
-        --insecure) EXTRA_ARGS+=(--insecure) ;;
+        --insecure) ;;  # already on
+        --secure) EXTRA_ARGS=() ;;
         --json) JSON=1 ;;
     esac
 done
@@ -37,7 +41,7 @@ run_one() {
     local t0 t1 status elapsed out_file
     out_file=$(mktemp)
     t0=$(date +%s.%N)
-    if "$@" "${EXTRA_ARGS[@]}" >"$out_file" 2>&1; then
+    if "$@" >"$out_file" 2>&1; then
         status="PASS"
     else
         rc=$?
@@ -67,7 +71,10 @@ run_one() {
 if [ "$JSON" -eq 0 ]; then
     echo "Probing polymarket CLI against your current network..."
     if [ ${#EXTRA_ARGS[@]} -gt 0 ]; then
-        echo "  (with extra args: ${EXTRA_ARGS[*]})"
+        echo "  (default mode with --insecure — most corporate networks need this for Gamma)"
+        echo "  (use --secure to test without SSL bypass)"
+    else
+        echo "  (secure mode — no SSL bypass)"
     fi
     echo
     printf "  %-32s  %-12s  %7s   %s\n" "COMMAND" "STATUS" "TIME" "FIRST HINT"
