@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Polymarket Snapshot &mdash; 2026-09-28 13:39 UTC</title>
+<title>Polymarket 全球焦點 2026-09-28 14:46 UTC</title>
 <style>
   :root {
     --bg: #0e1117; --panel: #161b22; --panel-alt: #1a1f2b;
@@ -13,22 +13,24 @@
   * { box-sizing: border-box; }
   body {
     background: var(--bg); color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Consolas, monospace;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+                 "Microsoft JhengHei", Consolas, monospace;
     margin: 0; padding: 24px; line-height: 1.5;
   }
   h1 { color: var(--accent); margin: 0 0 4px 0; font-size: 22px; }
-  .sub { color: var(--fg-dim); margin-bottom: 24px; font-size: 13px; }
+  .sub { color: var(--fg-dim); margin-bottom: 8px; font-size: 13px; }
+  .intro { color: var(--fg-dim); margin: 0 0 24px 0; font-size: 12px; max-width: 800px; }
   h2 {
-    color: var(--fg-dim); font-size: 12px; text-transform: uppercase;
-    letter-spacing: 1px; margin: 32px 0 12px 0;
-    padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    color: var(--accent); font-size: 14px; font-weight: 600;
+    margin: 32px 0 12px 0; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
   }
   table { width: 100%; border-collapse: collapse; background: var(--panel); font-size: 13px; }
   th {
     text-align: left; color: var(--fg-dim); font-weight: normal;
     padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel-alt);
   }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
   tr:hover td { background: var(--panel-alt); }
   td.q { max-width: 800px; }
   td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -44,96 +46,159 @@
   td.time { color: var(--fg-dim); font-variant-numeric: tabular-nums; }
   td.out  { color: var(--accent); }
   td.title { color: var(--fg-dim); }
+  td.title .q-zh { color: var(--fg); margin-top: 2px; font-size: 12px; }
+  .q-zh {
+    color: var(--fg); margin-top: 2px; font-size: 12px; opacity: 0.85;
+  }
+  .group-count {
+    display: inline-block; margin-left: 8px;
+    padding: 1px 6px; border-radius: 3px;
+    background: var(--panel-alt); color: var(--fg-dim); font-size: 11px;
+  }
+  tr.group-detail td { padding: 0 12px 8px 36px; background: var(--bg); border-bottom: 1px solid var(--border); }
+  tr.group-detail details { color: var(--fg-dim); font-size: 12px; }
+  tr.group-detail summary { cursor: pointer; padding: 4px 0; }
+  tr.group-detail ul { margin: 4px 0; padding-left: 20px; }
+  tr.group-detail li { margin: 2px 0; }
   .meta {
     display: flex; gap: 24px; margin: 16px 0 32px 0; padding: 12px 16px;
     background: var(--panel); border-left: 3px solid var(--accent); font-size: 13px;
+    flex-wrap: wrap;
   }
   .meta b { color: var(--fg-dim); font-weight: normal; margin-right: 6px; }
   .legend { color: var(--fg-dim); font-size: 12px; margin-top: 8px; }
 </style>
 </head>
 <body>
-<h1>Polymarket Snapshot</h1>
-<div class="sub">Generated 2026-09-28 13:39 UTC</div>
+<h1>Polymarket 全球焦點</h1>
+<div class="sub">Generated 2026-09-28 14:46 UTC</div>
+<p class="intro">
+  Polymarket 是全球關注的時事與趨勢的「市場機率」訊號源 — 這份報告把今天 30+ 個主題的市場共識整理出來，
+  按分類（政治 / 加密 / 經濟 / 科技 / 國際 / 體育 / 名人）排序，並附中文摘要。
+  「差距」欄位（Yes 機率 - No 機率）表示全球共識強度：綠色 ≈ 0 為強烈共識，黃色差距大為有爭議或流動性差。
+</p>
 
 <div class="meta">
-  <div><b>Markets shown:</b>30</div>
-  <div><b>Of which trading now:</b>13</div>
-  <div><b>Trades shown:</b>20</div>
-  <div><b>Data sources:</b>CLOB API, Data API</div>
+  <div><b>主題數:</b>40</div>
+  <div><b>市場總數:</b>41</div>
+  <div><b>現正交易中:</b>0</div>
+  <div><b>分類:</b>7</div>
+  <div><b>資料來源:</b>CLOB API, Data API</div>
 </div>
 
-<h2>Markets ranked by trading status, then by |Yes &minus; No| spread</h2>
+<h2>政治 (4 主題)</h2>
+<table>
+  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>
+  <tbody>
+    <tr class="spread-locked "><td class="q">🟡 Will Nikki Haley file to run for president by June 30, 2023?<div class="q-zh">Nikki 海利 file to run for president 在 六月 30, 2023</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Which party will control the U.S. Senate after the 2024 election?<div class="q-zh">Which party will control 美國 Senate after the 2024 election</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Trump drop out before the 2024 Iowa Caucus?<div class="q-zh">川普 drop out before the 2024 Iowa Caucus</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will a mugshot of Donald Trump be released by a state or federal law enforcement agency by June 30?<div class="q-zh">a mugshot of Donald 川普 be released 在 a state or federal law enforcement agency 在 六月 30</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+  </tbody>
+</table>
+<h2>經濟 (3 主題)</h2>
+<table>
+  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>
+  <tbody>
+    <tr class="spread-locked "><td class="q">🟡 Will the Fed's balance sheet hit ATH by June 26?<div class="q-zh">the 聯準會's balance sheet hit ATH 在 六月 26</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will a third US bank fail by March 31?<div class="q-zh">a third 美國 bank fail 在 三月 31</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will US enter hyperinflation by June 2023? (From @balaji)<div class="q-zh">US enter hyper通膨 在 六月 2023? (From @balaji)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+  </tbody>
+</table>
+<h2>科技 (2 主題)</h2>
+<table>
+  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>
+  <tbody>
+    <tr class="spread-locked "><td class="q">🟡 Will Google publicly launch a ChatGPT competitor by March 31?<div class="q-zh">Google publicly launch a ChatGPT competitor 在 三月 31</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will GPT-4 have 1t+ parameters?<div class="q-zh">GPT-4 have 1t+ parameters</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+  </tbody>
+</table>
+<h2>加密貨幣 (16 主題)</h2>
+<table>
+  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>
+  <tbody>
+    <tr class="spread-locked "><td class="q">🟡 Will $BTC reach $1700 by January 4?<div class="q-zh">$BTC reach $1700 在 一月 4</div></td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Coinbase staking be available in the US through March 31?<div class="q-zh">Coinbase staking be available in the 美國 through 三月 31</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will OpenSea launch their token by April 1?<div class="q-zh">OpenSea launch their token 在 四月 1</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Base mainnet launch by June 30?<div class="q-zh">Base mainnet launch 在 六月 30</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Amazon debut its NFT marketplace with any collections on the AVAX chain?<div class="q-zh">Amazon debut its NFT marketplace with any collections on the AVAX chain</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Blur season 2 end by March 31?<div class="q-zh">Blur season 2 end 在 三月 31</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will the SAFE token be transferable by June 30?<div class="q-zh">the SAFE token be transferable 在 六月 30</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will a major exchange go insolvent from the Silvergate collapse?<div class="q-zh">a major exchange go insolvent from the Silvergate collapse</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 WILL $BUSD depeg by April 1?<div class="q-zh">WILL $BUSD depeg 在 四月 1</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will more than 35 Million USDC be in circulation on March 20?<div class="q-zh">more than 35 Million USDC be in circulation 三月 20</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Arbitrum's token ticker be $ARB?<div class="q-zh">Arbitrum's token ticker be $ARB</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will the FDV of Arbitrum's token be above $1b 1 week after launch?<div class="q-zh">the FDV of Arbitrum's token be above $1b 1 week after launch</div><span class="group-count">+1 相關</span></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr><tr class="group-detail"><td colspan="4"><details><summary>展開看其他 2 個相關市場</summary><ul><li>Will the FDV of Arbitrum's token be above $1b 1 week after launch? — <b>Yes 0.0%</b></li><li>Will the FDV of Arbitrum's token be above $10b 1 week after launch? — <b>Yes 0.0%</b></li></ul></details></td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will the Arbitrum token's price be above $0.50 one week after launch?<div class="q-zh">the Arbitrum token's price be above $0.50 one week after launch</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will the Arbitrum token's price be above $2 one week after launch?<div class="q-zh">the Arbitrum token's price be above $2 one week after launch</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Arbitrum's token have a higher market cap than $OP 1 week after launch?<div class="q-zh">Arbitrum's token have a higher market cap than $OP 1 week after launch</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Metamask airdrop a native token before 2023?<div class="q-zh">Metamask airdrop a native token before 2023</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+  </tbody>
+</table>
+<h2>體育 (12 主題)</h2>
+<table>
+  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>
+  <tbody>
+    <tr class="spread-locked "><td class="q">🟡 Will Tesla's EPS for Q4 2022 beat estimates?<div class="q-zh">Tesla's EPS for Q4 2022 擊敗 estimates</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will any field goal be scored from 55 yards or greater?<div class="q-zh">any field goal be scored from 55 yards or greater</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Super Bowl LVII be won on a field goal?<div class="q-zh">超級盃 LVII be won on a field goal</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Who will win Super Bowl LVII? (no overtime)<div class="q-zh">Who will win 超級盃 LVII? (否 overtime)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Newcastle win the 2023 Premier League championship?<div class="q-zh">Newcastle 贏得 2023 Premier League championship</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Newcastle beat Nottingham Forest? (03/17/2023)<div class="q-zh">Newcastle 擊敗 Nottingham Forest? (03/17/2023)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Aston Villa beat Bournemouth? (03/18/2023)<div class="q-zh">Aston Villa 擊敗 Bournemouth? (03/18/2023)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Brentford beat Liecester? (03/18/2023)<div class="q-zh">Brentford 擊敗 Liecester? (03/18/2023)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Spurs beat Southampton? (03/18/2023)<div class="q-zh">Spurs 擊敗 Southampton? (03/18/2023)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Chelsea beat Everton? (03/18/2023)<div class="q-zh">Chelsea 擊敗 Everton? (03/18/2023)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Wolves beat Leeds? (03/18/2023)<div class="q-zh">Wolves 擊敗 Leeds? (03/18/2023)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will Arsenal beat Crystal Palace? (03/19/2023)<div class="q-zh">Arsenal 擊敗 Crystal Palace? (03/19/2023)</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+  </tbody>
+</table>
+<h2>音樂 (1 主題)</h2>
+<table>
+  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>
+  <tbody>
+    <tr class="spread-locked "><td class="q">🟡 Will "Flowers" be #1 globally on Spotify for January 28?<div class="q-zh">"Flowers" be #1 globally on Spotify for 一月 28</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+  </tbody>
+</table>
+<h2>平台 / 業界 (2 主題)</h2>
+<table>
+  <thead><tr><th>主題</th><th>是</th><th>否</th><th>差距</th></tr></thead>
+  <tbody>
+    <tr class="spread-locked "><td class="q">🟡 Will "PredictIt Exchange" be live by June 1?<div class="q-zh">"PredictIt Exchange" be live 在 六月 1</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+    <tr class="spread-locked "><td class="q">🟡 Will DCG announce it is filing for bankruptcy by March 1?<div class="q-zh">DCG an否unce it is filing for bankruptcy 在 三月 1</div></td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0pp</td></tr>
+  </tbody>
+</table>
+
+<h2>最近交易 (最新在上)</h2>
 <table>
   <thead>
-    <tr><th>Question</th><th>Yes</th><th>No</th><th>Yes&minus;No</th></tr>
+    <tr><th>時間</th><th>方向</th><th>價格</th><th>數量</th><th>結果</th><th>市場</th></tr>
   </thead>
   <tbody>
-    <tr class="spread-huge trading"><td class="q">🟢 Will Julie Su be the next U.S. Secretary of Labor?</td><td class="num yes">0.0%</td><td class="num no">100.0%</td><td class="num spread">100.0 pp</td></tr>
-    <tr class="spread-huge trading"><td class="q">🟢 Will Tim Ryan be the next Secretary of Labor?</td><td class="num yes">0.0%</td><td class="num no">100.0%</td><td class="num spread">100.0 pp</td></tr>
-    <tr class="spread-huge trading"><td class="q">🟢 Will Andy Levin be the next Secretary of Labor?</td><td class="num yes">0.0%</td><td class="num no">100.0%</td><td class="num spread">100.0 pp</td></tr>
-    <tr class="spread-huge trading"><td class="q">🟢 Will Sean Patrick Maloney be the next Secretary of Labor?</td><td class="num yes">0.0%</td><td class="num no">100.0%</td><td class="num spread">100.0 pp</td></tr>
-    <tr class="spread-huge trading"><td class="q">🟢 Will there be a Senate vacancy in Pennsylvania by EOY?</td><td class="num yes">0.0%</td><td class="num no">100.0%</td><td class="num spread">100.0 pp</td></tr>
-    <tr class="spread-huge trading"><td class="q">🟢 Will the Fed cut rates in 2023?</td><td class="num yes">0.0%</td><td class="num no">100.0%</td><td class="num spread">100.0 pp</td></tr>
-    <tr class="spread-huge trading"><td class="q">🟢 Will Trump win the 2024 Iowa Caucus?</td><td class="num yes">100.0%</td><td class="num no">0.0%</td><td class="num spread">-100.0 pp</td></tr>
-    <tr class="spread-huge trading"><td class="q">🟢 Will Donald Trump be President of the USA on September 30, 2023?</td><td class="num yes">0.0%</td><td class="num no">100.0%</td><td class="num spread">100.0 pp</td></tr>
-    <tr class="spread-locked trading"><td class="q">🟢 Will GPT-4 have 500b+ parameters?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked trading"><td class="q">🟢 Will the FDV of OpenSea's token be above $5b 1 week after launch?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked trading"><td class="q">🟢 Will the FDV of OpenSea's token be above $10b 1 week after launch?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked trading"><td class="q">🟢 Will the FDV of OpenSea's token be above $15b 1 week after launch?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked trading"><td class="q">🟢 Will the FDV of OpenSea's token 1 week after launch be above Blur's FDV?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 Will the clob strapi integration work?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 Will $BTC reach $1700 by January 4?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 Will "PredictIt Exchange" be live by June 1?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Donald Trump win the 2024 US Presidential Election?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Joe Biden win the 2024 US Presidential Election?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Kamala Harris win the 2024 US Presidential Election?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Gavin Newsom win the 2024 US Presidential Election?</td><td class="num yes">50.0%</td><td class="num no">50.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 excitingTEST!!!</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 Will DCG announce it is filing for bankruptcy by March 1?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 Will Tesla's EPS for Q4 2022 beat estimates?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 Will "Flowers" be #1 globally on Spotify for January 28?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Trump win the 2024 US Presidential Election?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Joe Biden win the 2024 US Presidential Election?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Kamala Harris win the 2024 US Presidential Election?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Ron DeSantis win the 2024 US Presidential Election?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Gavin Newsom win the 2024 US Presidential Election?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
-    <tr class="spread-locked "><td class="q">🟡 archWill Nikki Haley win the 2024 US Presidential Election?</td><td class="num yes">0.0%</td><td class="num no">0.0%</td><td class="num spread">0.0 pp</td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">37.0%</td><td class="num">x   67.57</td><td class="out">[Up]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">64.0%</td><td class="num">x    7.30</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">37.0%</td><td class="num">x    5.00</td><td class="out">[Up]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">93.8%</td><td class="num">x  127.00</td><td class="out">[Up]</td><td class="title">XRP Up or Down - September 28, 10:30AM-10:45AM ET<div class="q-zh">XRP Up or Down - 九月 28, 10:30AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">57.0%</td><td class="num">x  500.00</td><td class="out">[Yes]</td><td class="title">US x Iran ceasefire continues through October 31?<div class="q-zh">US x 伊朗 ceasefire continues through 十月 31</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">69.0%</td><td class="num">x   20.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">53.0%</td><td class="num">x   20.00</td><td class="out">[No]</td><td class="title">Will the 30-year Treasury yield dip below 5.20% before 2027?<div class="q-zh">the 30-year Treasury yield dip below 5.20% before 2027</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">67.0%</td><td class="num">x    3.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">99.8%</td><td class="num">x   15.87</td><td class="out">[No]</td><td class="title">Will the highest temperature in Shanghai be 27°C on Septembe<div class="q-zh">the highest temperature in Shanghai be 27°C on Septembe</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">98.8%</td><td class="num">x   11.02</td><td class="out">[Up]</td><td class="title">Ethereum Up or Down - September 28, 10:30AM-10:45AM ET<div class="q-zh">以太幣 Up or Down - 九月 28, 10:30AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">69.0%</td><td class="num">x  144.93</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">64.0%</td><td class="num">x    5.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">99.0%</td><td class="num">x   11.00</td><td class="out">[Up]</td><td class="title">Ethereum Up or Down - September 28, 10:30AM-10:45AM ET<div class="q-zh">以太幣 Up or Down - 九月 28, 10:30AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">69.0%</td><td class="num">x    5.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">68.0%</td><td class="num">x    5.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">68.0%</td><td class="num">x   10.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">比特幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="sell"><td class="time">14:41:03</td><td class="side">SELL</td><td class="num">53.4%</td><td class="num">x   40.00</td><td class="out">[No]</td><td class="title">Will US Dollar Index (DXY) hit (HIGH) 101.50 in September?<div class="q-zh">US Dollar Index (DXY) hit (HIGH) 101.50 in 九月</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">63.0%</td><td class="num">x   10.00</td><td class="out">[Down]</td><td class="title">Ethereum Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">以太幣 Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">62.0%</td><td class="num">x   10.00</td><td class="out">[Down]</td><td class="title">Solana Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">Solana Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
+    <tr class="buy"><td class="time">14:41:03</td><td class="side">BUY</td><td class="num">60.0%</td><td class="num">x   10.00</td><td class="out">[Down]</td><td class="title">Solana Up or Down - September 28, 10:40AM-10:45AM ET<div class="q-zh">Solana Up or Down - 九月 28, 10:40AM-10:45AM ET</div></td></tr>
   </tbody>
 </table>
 <div class="legend">
-  &#x1F7E2; = currently accepting orders &middot; &#x1F7E1; = active not yet closed but not taking orders &middot; &#x26AA; = historical/closed
-  Yellow spread = wide mispricing (potential arb or thin book).
-  Green spread &asymp; 0 = Yes + No prices sum to ~100%, no arb.
+  &#x1F7E2; 現正接受下單 · &#x1F7E1; 活躍但暫停接受下單 · 綠色差距 ≈ 0 為強烈共識 · 黃色差距大為有爭議
 </div>
-
-<h2>Recent trades (latest first)</h2>
-<table>
-  <thead>
-    <tr><th>Time</th><th>Side</th><th>Price</th><th>Size</th><th>Outcome</th><th>Market</th></tr>
-  </thead>
-  <tbody>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">39.3%</td><td class="num">x   15.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">22.0%</td><td class="num">x    5.09</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">24.0%</td><td class="num">x    5.00</td><td class="out">[Down]</td><td class="title">BNB Up or Down - September 28, 9:30AM-9:45AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">78.0%</td><td class="num">x   64.10</td><td class="out">[Mili Poljicak]</td><td class="title">Porto 2: Max Basing vs Mili Poljicak</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">75.0%</td><td class="num">x   10.53</td><td class="out">[Up]</td><td class="title">Bitcoin Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">67.0%</td><td class="num">x   10.00</td><td class="out">[No]</td><td class="title">Will Elon Musk’s net worth be between $800B and $900B on Sep</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">20.0%</td><td class="num">x    5.00</td><td class="out">[Down]</td><td class="title">XRP Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">78.0%</td><td class="num">x   15.47</td><td class="out">[Up]</td><td class="title">Bitcoin Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">24.9%</td><td class="num">x  138.52</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="sell"><td class="time">13:35:32</td><td class="side">SELL</td><td class="num">83.8%</td><td class="num">x  244.30</td><td class="out">[No]</td><td class="title">Will Toluca finish 2nd in the 2026 Liga MX Apertura?</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">28.0%</td><td class="num">x    3.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9:30AM-9:45AM ET</td></tr>
-    <tr class="sell"><td class="time">13:35:32</td><td class="side">SELL</td><td class="num">2.4%</td><td class="num">x    5.17</td><td class="out">[Up]</td><td class="title">Meta (META) Up or Down on September 28?</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">21.3%</td><td class="num">x  587.71</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">22.5%</td><td class="num">x    5.11</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">28.0%</td><td class="num">x    7.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9:30AM-9:45AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">22.0%</td><td class="num">x   20.00</td><td class="out">[Down]</td><td class="title">Bitcoin Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">0.2%</td><td class="num">x    5.00</td><td class="out">[Yes]</td><td class="title">Will Shakhtar Donetsk win the 2026-27 UEFA Champions League </td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">50.0%</td><td class="num">x   10.00</td><td class="out">[Down]</td><td class="title">Ethereum Up or Down - September 28, 9:30AM-9:45AM ET</td></tr>
-    <tr class="buy"><td class="time">13:35:32</td><td class="side">BUY</td><td class="num">79.0%</td><td class="num">x   56.05</td><td class="out">[Up]</td><td class="title">Ethereum Up or Down - September 28, 9:35AM-9:40AM ET</td></tr>
-    <tr class="sell"><td class="time">13:35:32</td><td class="side">SELL</td><td class="num">45.0%</td><td class="num">x   50.00</td><td class="out">[Up]</td><td class="title">Ethereum Up or Down - September 28, 9AM ET</td></tr>
-  </tbody>
-</table>
 </body>
 </html>
