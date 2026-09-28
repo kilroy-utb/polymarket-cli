@@ -40,6 +40,15 @@ _DEFAULT_UA = (
 )
 
 
+class PolymarketError(Exception):
+    """Raised by cmd_* functions when an API call fails.
+
+    CLI mode catches this in main() and exits with the message.
+    GUI mode catches this on the worker thread and shows it in the UI.
+    """
+    pass
+
+
 # ---------- Client ----------
 
 class PolymarketClient:
@@ -56,12 +65,7 @@ class PolymarketClient:
         self.timeout = timeout
 
     def get(self, url: str) -> Union[dict, list]:
-        """GET request, return parsed JSON. Exits on error.
-
-        SSL verification is on by default. If you hit a self-signed cert
-        (common on corporate networks with SSL inspection), retry with
-        --insecure or set POLYMARKET_INSECURE=1.
-        """
+        """GET request, return parsed JSON. Raises PolymarketError on failure."""
         req = urllib.request.Request(url, headers={"User-Agent": self.user_agent})
         ctx = ssl._create_unverified_context() if self.insecure else None
         try:
@@ -69,31 +73,26 @@ class PolymarketClient:
                 return json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
             body = e.read().decode(errors="replace")[:300]
-            # Cloudflare browser integrity check returns 403 with body "error code: 1010"
+            host = urllib.parse.urlparse(url).netloc
             if "1010" in body or "browser integrity" in body.lower():
-                host = urllib.parse.urlparse(url).netloc
-                print(f"Cloudflare blocked request to {host} (browser integrity check, error 1010).", file=sys.stderr)
-                print(f"  This usually means a custom User-Agent is being rejected.", file=sys.stderr)
-                print(f"  Try setting POLYMARKET_USER_AGENT to a normal browser string.", file=sys.stderr)
-            # Detect firewall blocks that come back as 403/404 with HTML "blocked" pages
-            elif e.code in (403, 404) and ("<html" in body.lower() or "blocked" in body.lower() or "封鎖" in body):
-                host = urllib.parse.urlparse(url).netloc
-                print(f"Network blocked access to {host} (HTTP {e.code} — firewall/ISP block page detected).", file=sys.stderr)
-                print(f"  Try a different network (mobile hotspot / VPN).", file=sys.stderr)
-                print(f"  The endpoint itself is up — your network is filtering it.", file=sys.stderr)
-            else:
-                print(f"HTTP {e.code}: {e.reason} — {body}", file=sys.stderr)
-            sys.exit(1)
+                raise PolymarketError(
+                    f"Cloudflare blocked {host} (browser integrity check 1010). "
+                    f"Try setting POLYMARKET_USER_AGENT to a normal browser string."
+                )
+            if e.code in (403, 404) and ("<html" in body.lower() or "blocked" in body.lower() or "封鎖" in body):
+                raise PolymarketError(
+                    f"Network blocked {host} (HTTP {e.code}). "
+                    f"Try a different network (mobile hotspot / VPN)."
+                )
+            raise PolymarketError(f"HTTP {e.code} {e.reason} — {body}")
         except urllib.error.URLError as e:
             reason = str(e.reason)
             if "CERTIFICATE_VERIFY_FAILED" in reason or "certificate verify failed" in reason.lower():
-                print(f"SSL certificate verification failed.", file=sys.stderr)
-                print(f"  This usually means your network is MITM-ing HTTPS (corporate proxy, VPN, Charles, etc.).", file=sys.stderr)
-                print(f"  Retry with --insecure or set POLYMARKET_INSECURE=1", file=sys.stderr)
-                print(f"  (only safe for read-only public data like trades)", file=sys.stderr)
-            else:
-                print(f"Connection error: {e.reason}", file=sys.stderr)
-            sys.exit(1)
+                raise PolymarketError(
+                    "SSL certificate verification failed. "
+                    "Your network is MITM-ing HTTPS — retry with --insecure."
+                )
+            raise PolymarketError(f"Connection error: {e.reason}")
 
 
 # Default client used by the cmd_xxx functions below. Tests / callers
@@ -223,8 +222,7 @@ def cmd_trending(limit: int, as_json: bool):
 def cmd_market(slug: str, as_json: bool):
     markets = _get(f"{GAMMA}/markets?slug={urllib.parse.quote(slug)}")
     if not markets:
-        print(f"No market found with slug: {slug}", file=sys.stderr)
-        sys.exit(1)
+        raise PolymarketError(f"No market found with slug: {slug}")
     m = markets[0]
     if as_json:
         return emit(m, True)
@@ -246,8 +244,7 @@ def cmd_market(slug: str, as_json: bool):
 def cmd_event(slug: str, as_json: bool):
     events = _get(f"{GAMMA}/events?slug={urllib.parse.quote(slug)}")
     if not events:
-        print(f"No event found with slug: {slug}", file=sys.stderr)
-        sys.exit(1)
+        raise PolymarketError(f"No event found with slug: {slug}")
     evt = events[0]
     if as_json:
         return emit(evt, True)
@@ -311,8 +308,7 @@ def cmd_trades(limit: int, market: Optional[str], outcome: Optional[str], as_jso
         url += f"&market={market}"
     trades = _get(url)
     if not isinstance(trades, list):
-        print(f"Unexpected response: {trades}", file=sys.stderr)
-        sys.exit(1)
+        raise PolymarketError(f"Unexpected response: {trades}")
     if outcome:
         outcome_lower = outcome.lower()
         trades = [t for t in trades if str(t.get("outcome", "")).lower() == outcome_lower]
@@ -378,15 +374,13 @@ def cmd_quick(slug: str, depth: int, as_json: bool):
     """Market + both token prices + both order books in one shot."""
     markets = _get(f"{GAMMA}/markets?slug={urllib.parse.quote(slug)}")
     if not markets:
-        print(f"No market found with slug: {slug}", file=sys.stderr)
-        sys.exit(1)
+        raise PolymarketError(f"No market found with slug: {slug}")
     m = markets[0]
     tokens = _parse_json_field(m.get("clobTokenIds", "[]"))
     outcomes = _parse_json_field(m.get("outcomes", []))
 
     if not isinstance(tokens, list) or len(tokens) < 2:
-        print("Market has no tradable CLOB tokens.", file=sys.stderr)
-        sys.exit(1)
+        raise PolymarketError("Market has no tradable CLOB tokens.")
 
     snapshots = []
     for i, t in enumerate(tokens):
@@ -526,6 +520,10 @@ def main(argv=None):
 
     try:
         args.func(args)
+    except PolymarketError as e:
+        # CLI mode: print the friendly message and exit non-zero.
+        print(str(e), file=sys.stderr)
+        sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(130)
 

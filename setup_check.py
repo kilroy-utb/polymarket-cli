@@ -47,7 +47,8 @@ def check_python() -> bool:
 
 def check_stdlib() -> bool:
     header("stdlib check")
-    mods = ["urllib.request", "urllib.parse", "urllib.error", "json", "argparse", "datetime"]
+    mods = ["urllib.request", "urllib.parse", "urllib.error", "json", "argparse", "datetime", "queue", "threading"]
+    optional = ["tkinter"]
     all_ok = True
     for m in mods:
         try:
@@ -56,6 +57,13 @@ def check_stdlib() -> bool:
         except ImportError:
             fail(f"{m} (should be in stdlib — your Python install may be broken)")
             all_ok = False
+    for m in optional:
+        try:
+            __import__(m)
+            ok(f"{m} (required only for gui.py)")
+        except ImportError:
+            warn(f"{m} not available — CLI works fine, but gui.py won't run")
+            warn("  Install with: apt install python3-tk (Linux) or reinstall Python from python.org (Windows/macOS)")
     if not all_ok:
         print("  Reinstall Python: https://www.python.org/downloads/")
     return all_ok
@@ -65,7 +73,7 @@ def check_files() -> bool:
     header("file check")
     here = os.path.dirname(os.path.abspath(__file__))
     all_ok = True
-    for f in ["polymarket.py", "test_smoke.sh"]:
+    for f in ["polymarket.py", "test_smoke.sh", "probe.sh", "setup.sh", "setup_check.py", "gui.py"]:
         path = os.path.join(here, f)
         if os.path.isfile(path):
             ok(f"{f} present")

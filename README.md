@@ -134,6 +134,31 @@ Generous, unlikely to hit:
 ## Files
 
 - `polymarket.py` — the CLI (single file, stdlib only)
+- `gui.py` — Tkinter dark dashboard (single file, stdlib only)
 - `README.md` — this file
 - `test_smoke.sh` — hits each API once to confirm connectivity
-- `aliases.sh` — shell shortcuts (pmsearch, pmquick, pmtop, etc.)
+- `probe.sh` — per-command diagnostic for restricted networks
+- `setup.sh` / `setup_check.py` — environment + Python version + tkinter check
+- `aliases.sh` — shell shortcuts (pmsearch, pmquick, pmtop, **pmgui**, etc.)
+
+## GUI dashboard (Tkinter)
+
+A local dark-themed desktop app for watching market movements. Single file, no install.
+
+```bash
+python3 gui.py              # normal
+python3 gui.py --insecure   # on networks with MITM proxies
+POLYMARKET_INSECURE=1 python3 gui.py
+```
+
+Requirements: Python 3.8+ with `tkinter` (bundled with Python on Windows/macOS; on Linux install `python3-tk`).
+
+Layout:
+- **Top bar** — search box (Enter to run), refresh button, status indicator (●), trades-ticker toggle
+- **Left panel** — markets list (auto-refreshes every 30s)
+- **Center panel** — selected market detail: question header, outcomes with buy/sell/mid/last, order book (asks red / bids green), price history sparkline
+- **Bottom strip** — recent trades ticker, auto-scrolls every 10s (BUY green / SELL red)
+
+All network calls run on a background thread so the UI never freezes.
+
+If `tkinter` is missing, `setup.sh` warns and `gui.py` exits with an install hint — the CLI is unaffected.

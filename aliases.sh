@@ -48,6 +48,11 @@ for i, evt in enumerate(data, 1):
 "
 }
 
+#pmgui — open the Tkinter dark dashboard
+pmgui() {
+    python3 /opt/data/polymarket-cli/gui.py "$@"
+}
+
 # pmlookup <query> — print slugs only, one per line (for piping into pmmarket/pmquick)
 pmslugs() {
     local q="${1:?usage: pmslugs <query>}"
