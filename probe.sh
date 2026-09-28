@@ -83,7 +83,6 @@ run_one "Gamma: event <slug>"        python3 polymarket.py "${EXTRA_ARGS[@]}" ev
 # CLOB API
 run_one "CLOB: price"                python3 polymarket.py "${EXTRA_ARGS[@]}" price "$TOKEN_ID"
 run_one "CLOB: book"                 python3 polymarket.py "${EXTRA_ARGS[@]}" book "$TOKEN_ID" --depth 3
-run_one "CLOB: midpoint"             python3 polymarket.py "${EXTRA_ARGS[@]}" midpoint "$TOKEN_ID" 2>&1 || true   # not a cmd yet
 run_one "CLOB: history"              python3 polymarket.py "${EXTRA_ARGS[@]}" history "$CONDITION_ID" --interval 1w --fidelity 10
 
 # Data API
