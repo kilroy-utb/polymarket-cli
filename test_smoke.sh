@@ -43,28 +43,25 @@ check "Combo: token snapshot"     python3 polymarket.py token 160400154401962799
 check "Combo: quick market"       python3 polymarket.py quick will-jd-vance-win-the-2028-us-presidential-election --depth 2
 check "JSON output"               python3 polymarket.py trending --limit 1 --json
 
-# If any check failed, see whether it's an SSL cert issue. We probe Gamma
-# (which fails for many MITM'd networks) rather than trades, since trades
-# is the one host that tends to pass through cleanly.
+# If any check failed, retry everything with --insecure.
+# The previous SSL-only probe didn't catch networks where the proxy
+# returns 404 for filtered endpoints but works with --insecure.
 if [ "$FAIL" -gt 0 ]; then
-    if python3 polymarket.py market will-jd-vance-win-the-2028-us-presidential-election 2>&1 | grep -qi "CERTIFICATE_VERIFY_FAILED"; then
-        echo
-        echo "Detected SSL certificate failure (your network appears to MITM HTTPS)."
-        echo "Re-running all checks with --insecure..."
-        echo
-        PASS=0; FAIL=0
-        check "Gamma: trending"           python3 polymarket.py --insecure trending --limit 3
-        check "Gamma: search 'bitcoin'"   python3 polymarket.py --insecure search "bitcoin" --limit 2
-        check "Gamma: market by slug"     python3 polymarket.py --insecure market will-jd-vance-win-the-2028-us-presidential-election
-        check "Gamma: event by slug"      python3 polymarket.py --insecure event democratic-presidential-nominee-2028
-        check "CLOB: price"               python3 polymarket.py --insecure price 16040015440196279900485035793550429453516625694844857319147506590755961451627
-        check "CLOB: book"                python3 polymarket.py --insecure book 16040015440196279900485035793550429453516625694844857319147506590755961451627 --depth 3
-        check "CLOB: history"             python3 polymarket.py --insecure history 0x7ad403c3508f8e3912940fd1a913f227591145ca0614074208e0b962d5fcc422 --interval 1w --fidelity 10
-        check "Data: trades"              python3 polymarket.py --insecure trades --limit 5
-        check "Combo: token snapshot"     python3 polymarket.py --insecure token 16040015440196279900485035793550429453516625694844857319147506590755961451627
-        check "Combo: quick market"       python3 polymarket.py --insecure quick will-jd-vance-win-the-2028-us-presidential-election --depth 2
-        check "JSON output"               python3 polymarket.py --insecure trending --limit 1 --json
-    fi
+    echo
+    echo "Re-running all checks with --insecure (handles SSL issues and proxy filters)..."
+    echo
+    PASS=0; FAIL=0
+    check "Gamma: trending"           python3 polymarket.py --insecure trending --limit 3
+    check "Gamma: search 'bitcoin'"   python3 polymarket.py --insecure search "bitcoin" --limit 2
+    check "Gamma: market by slug"     python3 polymarket.py --insecure market will-jd-vance-win-the-2028-us-presidential-election
+    check "Gamma: event by slug"      python3 polymarket.py --insecure event democratic-presidential-nominee-2028
+    check "CLOB: price"               python3 polymarket.py --insecure price 16040015440196279900485035793550429453516625694844857319147506590755961451627
+    check "CLOB: book"                python3 polymarket.py --insecure book 16040015440196279900485035793550429453516625694844857319147506590755961451627 --depth 3
+    check "CLOB: history"             python3 polymarket.py --insecure history 0x7ad403c3508f8e3912940fd1a913f227591145ca0614074208e0b962d5fcc422 --interval 1w --fidelity 10
+    check "Data: trades"              python3 polymarket.py --insecure trades --limit 5
+    check "Combo: token snapshot"     python3 polymarket.py --insecure token 16040015440196279900485035793550429453516625694844857319147506590755961451627
+    check "Combo: quick market"       python3 polymarket.py --insecure quick will-jd-vance-win-the-2028-us-presidential-election --depth 2
+    check "JSON output"               python3 polymarket.py --insecure trending --limit 1 --json
 fi
 
 echo
