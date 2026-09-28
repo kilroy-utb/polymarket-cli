@@ -17,7 +17,7 @@ chmod +x polymarket.py
 ln -sf "$(pwd)/polymarket.py" /usr/local/bin/polymarket
 ```
 
-Requires Python 3.10+. No third-party dependencies — stdlib only (`urllib`, `json`, `argparse`).
+Requires Python 3.8+ (no PEP 604 union syntax used, so it works on older interpreters too). No third-party dependencies — stdlib only (`urllib`, `json`, `argparse`).
 
 ## Commands
 

@@ -25,6 +25,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 from datetime import datetime, timezone
+from typing import Union, Optional
 
 GAMMA = "https://gamma-api.polymarket.com"
 CLOB = "https://clob.polymarket.com"
@@ -37,7 +38,7 @@ _INSECURE = os.environ.get("POLYMARKET_INSECURE") == "1"
 
 # ---------- HTTP ----------
 
-def _get(url: str) -> dict | list:
+def _get(url: str) -> Union[dict, list]:
     """GET request, return parsed JSON. Exits on error.
 
     SSL verification is on by default. If you hit a self-signed cert
@@ -265,7 +266,7 @@ def cmd_history(condition_id: str, interval: str, fidelity: int, as_json: bool):
         print(f"  {ts}  {price:>7}  {bar}")
 
 
-def cmd_trades(limit: int, market: str | None, outcome: str | None, as_json: bool):
+def cmd_trades(limit: int, market: Optional[str], outcome: Optional[str], as_json: bool):
     url = f"{DATA}/trades?limit={limit}"
     if market:
         url += f"&market={market}"
