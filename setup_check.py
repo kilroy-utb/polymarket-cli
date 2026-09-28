@@ -8,6 +8,7 @@ and works under bash / zsh / dash / Git Bash.
 import sys
 import os
 import shutil
+import ssl
 import urllib.request
 import urllib.error
 
@@ -74,6 +75,12 @@ def check_files() -> bool:
     return all_ok
 
 
+_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
+
 def check_network() -> bool:
     header("network check")
     hosts = [
@@ -83,15 +90,22 @@ def check_network() -> bool:
     ]
     fails = 0
     ssl_failures = 0
+    cf_failures = 0
     for url in hosts:
         host = url.split("/")[2]
         ctx = None
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "polymarket-cli-setup"})
+            req = urllib.request.Request(url, headers={"User-Agent": _UA})
             with urllib.request.urlopen(req, timeout=10, context=ctx) as r:
                 ok(f"{host} (HTTP {r.status})")
         except urllib.error.HTTPError as e:
-            warn(f"{host} HTTP {e.code} (endpoint responding, may be rate-limited)")
+            reason_body = e.read().decode(errors="replace")[:200]
+            if "1010" in reason_body:
+                fail(f"{host} — Cloudflare browser integrity check (1010)")
+                cf_failures += 1
+            else:
+                warn(f"{host} HTTP {e.code} (endpoint responding, may be rate-limited)")
+            fails += 1
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             reason = getattr(e, "reason", e)
             reason_s = str(reason)
@@ -103,7 +117,12 @@ def check_network() -> bool:
             fails += 1
 
     if fails == len(hosts):
-        if ssl_failures > 0:
+        if cf_failures > 0:
+            print()
+            print("All three hosts failed with Cloudflare error 1010 (browser integrity check).")
+            print("This means Cloudflare is rejecting the User-Agent the script uses.")
+            print("This shouldn't happen with the default UA — file a bug.")
+        elif ssl_failures > 0:
             print()
             print("All three hosts failed with SSL certificate errors.")
             print("This usually means a corporate proxy / VPN / MITM tool is intercepting HTTPS.")
@@ -113,8 +132,7 @@ def check_network() -> bool:
             print("       python3 polymarket.py trades --insecure --limit 5")
             print("  2. Or set POLYMARKET_INSECURE=1 in your environment.")
             print("  3. Or add your proxy's CA cert to Python's cert store:")
-            print("       /Applications/Python\\ 3.x/Install\\ Certificates.command (macOS)")
-            print("       pip install --upgrade certifi  (all platforms)")
+            print("       pip install --upgrade certifi")
         else:
             print()
             print("All three hosts unreachable. Common causes:")

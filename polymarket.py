@@ -31,6 +31,15 @@ GAMMA = "https://gamma-api.polymarket.com"
 CLOB = "https://clob.polymarket.com"
 DATA = "https://data-api.polymarket.com"
 
+# Browser-like User-Agent. Polymarket's Cloudflare returns 403/1010
+# (browser integrity check) for the default urllib User-Agent, so we
+# pretend to be Chrome. Override with POLYMARKET_USER_AGENT env var.
+_DEFAULT_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+USER_AGENT = os.environ.get("POLYMARKET_USER_AGENT", _DEFAULT_UA)
+
 # SSL: default to verified. Allow opting out via env var or --insecure flag
 # because some corporate networks MITM HTTPS with a self-signed cert.
 _INSECURE = os.environ.get("POLYMARKET_INSECURE") == "1"
@@ -45,7 +54,7 @@ def _get(url: str) -> Union[dict, list]:
     (common on corporate networks with SSL inspection), retry with
     --insecure or set POLYMARKET_INSECURE=1.
     """
-    req = urllib.request.Request(url, headers={"User-Agent": "polymarket-cli/1.2"})
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     ctx = None
     if _INSECURE:
         ctx = ssl._create_unverified_context()
@@ -54,8 +63,14 @@ def _get(url: str) -> Union[dict, list]:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors="replace")[:300]
+        # Cloudflare browser integrity check returns 403 with body "error code: 1010"
+        if "1010" in body or "browser integrity" in body.lower():
+            host = urllib.parse.urlparse(url).netloc
+            print(f"Cloudflare blocked request to {host} (browser integrity check, error 1010).", file=sys.stderr)
+            print(f"  This usually means a custom User-Agent is being rejected.", file=sys.stderr)
+            print(f"  Try setting POLYMARKET_USER_AGENT to a normal browser string.", file=sys.stderr)
         # Detect firewall blocks that come back as 403/404 with HTML "blocked" pages
-        if e.code in (403, 404) and ("<html" in body.lower() or "blocked" in body.lower() or "封鎖" in body):
+        elif e.code in (403, 404) and ("<html" in body.lower() or "blocked" in body.lower() or "封鎖" in body):
             host = urllib.parse.urlparse(url).netloc
             print(f"Network blocked access to {host} (HTTP {e.code} — firewall/ISP block page detected).", file=sys.stderr)
             print(f"  Try a different network (mobile hotspot / VPN).", file=sys.stderr)
