@@ -82,28 +82,48 @@ def check_network() -> bool:
         "https://data-api.polymarket.com/trades?limit=1",
     ]
     fails = 0
+    ssl_failures = 0
     for url in hosts:
         host = url.split("/")[2]
+        ctx = None
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "polymarket-cli-setup"})
-            with urllib.request.urlopen(req, timeout=10) as r:
+            with urllib.request.urlopen(req, timeout=10, context=ctx) as r:
                 ok(f"{host} (HTTP {r.status})")
         except urllib.error.HTTPError as e:
             warn(f"{host} HTTP {e.code} (endpoint responding, may be rate-limited)")
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             reason = getattr(e, "reason", e)
-            fail(f"{host} — {reason}")
+            reason_s = str(reason)
+            if "CERTIFICATE_VERIFY_FAILED" in reason_s or "certificate verify failed" in reason_s.lower():
+                fail(f"{host} — SSL cert verify failed (likely MITM/proxy on your network)")
+                ssl_failures += 1
+            else:
+                fail(f"{host} — {reason}")
             fails += 1
 
     if fails == len(hosts):
-        print()
-        print("All three hosts unreachable. Common causes:")
-        print("  - Corporate / school firewall blocking outbound HTTPS")
-        print("  - VPN required for this network")
-        print("  - DNS misconfigured")
-        print()
-        print("Try opening https://gamma-api.polymarket.com in a browser.")
-        print("If the browser works but this fails, you likely need a proxy.")
+        if ssl_failures > 0:
+            print()
+            print("All three hosts failed with SSL certificate errors.")
+            print("This usually means a corporate proxy / VPN / MITM tool is intercepting HTTPS.")
+            print()
+            print("Options:")
+            print("  1. Use --insecure on every command:")
+            print("       python3 polymarket.py trades --insecure --limit 5")
+            print("  2. Or set POLYMARKET_INSECURE=1 in your environment.")
+            print("  3. Or add your proxy's CA cert to Python's cert store:")
+            print("       /Applications/Python\\ 3.x/Install\\ Certificates.command (macOS)")
+            print("       pip install --upgrade certifi  (all platforms)")
+        else:
+            print()
+            print("All three hosts unreachable. Common causes:")
+            print("  - Corporate / school firewall blocking outbound HTTPS")
+            print("  - VPN required for this network")
+            print("  - DNS misconfigured")
+            print()
+            print("Try opening https://gamma-api.polymarket.com in a browser.")
+            print("If the browser works but this fails, you likely need a proxy.")
         return False
     return True
 

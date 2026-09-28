@@ -18,6 +18,8 @@ Usage:
 """
 import argparse
 import json
+import os
+import ssl
 import sys
 import urllib.request
 import urllib.parse
@@ -28,21 +30,40 @@ GAMMA = "https://gamma-api.polymarket.com"
 CLOB = "https://clob.polymarket.com"
 DATA = "https://data-api.polymarket.com"
 
+# SSL: default to verified. Allow opting out via env var or --insecure flag
+# because some corporate networks MITM HTTPS with a self-signed cert.
+_INSECURE = os.environ.get("POLYMARKET_INSECURE") == "1"
+
 
 # ---------- HTTP ----------
 
 def _get(url: str) -> dict | list:
-    """GET request, return parsed JSON. Exits on error."""
-    req = urllib.request.Request(url, headers={"User-Agent": "polymarket-cli/1.1"})
+    """GET request, return parsed JSON. Exits on error.
+
+    SSL verification is on by default. If you hit a self-signed cert
+    (common on corporate networks with SSL inspection), retry with
+    --insecure or set POLYMARKET_INSECURE=1.
+    """
+    req = urllib.request.Request(url, headers={"User-Agent": "polymarket-cli/1.2"})
+    ctx = None
+    if _INSECURE:
+        ctx = ssl._create_unverified_context()
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20, context=ctx) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors="replace")[:300]
         print(f"HTTP {e.code}: {e.reason} — {body}", file=sys.stderr)
         sys.exit(1)
     except urllib.error.URLError as e:
-        print(f"Connection error: {e.reason}", file=sys.stderr)
+        reason = str(e.reason)
+        if "CERTIFICATE_VERIFY_FAILED" in reason or "certificate verify failed" in reason.lower():
+            print(f"SSL certificate verification failed.", file=sys.stderr)
+            print(f"  This usually means your network is MITM-ing HTTPS (corporate proxy, VPN, Charles, etc.).", file=sys.stderr)
+            print(f"  Retry with --insecure or set POLYMARKET_INSECURE=1", file=sys.stderr)
+            print(f"  (only safe for read-only public data like trades)", file=sys.stderr)
+        else:
+            print(f"Connection error: {e.reason}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -380,10 +401,14 @@ def build_parser() -> argparse.ArgumentParser:
         description="Polymarket read-only CLI (Gamma + CLOB + Data API).",
     )
     p.add_argument("--json", action="store_true", help="Output JSON instead of formatted text.")
+    p.add_argument("--insecure", action="store_true",
+                   help="Skip SSL certificate verification (for corporate MITM networks). "
+                        "Equivalent to POLYMARKET_INSECURE=1.")
 
     sub = p.add_subparsers(dest="cmd", required=True)
     parent_json = argparse.ArgumentParser(add_help=False)
     parent_json.add_argument("--json", action="store_true", help="Output JSON instead of formatted text.")
+    parent_json.add_argument("--insecure", action="store_true", help="Skip SSL cert verification.")
 
     s = sub.add_parser("search", help="Search events/markets by query.", parents=[parent_json])
     s.add_argument("query")
@@ -431,6 +456,11 @@ def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
     as_json = args.json
+
+    # --insecure flag flips the module-level _INSECURE before any request is made.
+    if getattr(args, "insecure", False):
+        global _INSECURE
+        _INSECURE = True
 
     try:
         if args.cmd == "search":
