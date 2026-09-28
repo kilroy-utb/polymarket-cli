@@ -126,8 +126,8 @@ def check_network() -> bool:
                     with _probe(url, unverified_ctx) as r:
                         warn(f"{host} (SSL cert verify failed, but reachable with --insecure — HTTP {r.status})")
                         ssl_failures -= 1   # reachable, don't count as failure
-                except Exception:
-                    fail(f"{host} — SSL cert verify failed AND unreachable with --insecure")
+                except Exception as retry_err:
+                    fail(f"{host} — SSL cert verify failed AND unreachable with --insecure ({type(retry_err).__name__}: {str(retry_err)[:200]})")
             else:
                 fail(f"{host} — {reason_s}")
                 real_failures += 1
